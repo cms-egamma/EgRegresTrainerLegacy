@@ -77,7 +77,7 @@ CXX           = g++
 ifeq ($(DEBUG),1)
 CXXFLAGS      = -fPIC -Wall -g -O  -Werror  -Wfatal-errors
 else
-CXXFLAGS      = -fPIC -Wall -O2 -Werror -Wfatal-errors
+CXXFLAGS      = -fPIC -Wall -O3 -fopenmp -Werror -Wfatal-errors
 
 endif
 LD            = g++
@@ -91,7 +91,7 @@ ROOTCFLAGS   := $(shell root-config --cflags) -I$(ROOFITSYS)/include
 ROOTCFLAGS   += -I$(ROOFITSYS)/include
 #ROOTLIBS     := $(shell root-config --libs) -lDCache -L/raid/expt-sw/SL4/cms/slc4_ia32_gcc345/external/dcap/1.2.35-CMS3/lib/ -ldcap
 ROOTLIBS     := $(shell root-config --libs) -lDCache 
-ROOTLIBS     += -L$(ROOFITSYS)/lib -lRooFitCore -lRooFit -lRooStats -lFoam -lMinuit
+ROOTLIBS     += -L$(ROOFITSYS)/lib -lRooFitCore -lRooFit -lRooStats -lFoam -lMinuit -lTMVA
 
 
 #we dont always need to link this library in, only if we are going to run
@@ -106,12 +106,12 @@ endif
 ROOTGLIBS    := $(shell root-config --glibs)
 
 CMSSWFLAGS    = -I$(CMSSW_BASE)/src -I$(CMSSW_RELEASE_BASE)/src
-
+CMSSWLIBS     = -L${CMSSW_BASE}/lib/${SCRAM_ARCH} -L${CMSSW_RELEASE_BASE}/lib/${SCRAM_ARCH} -lCondFormatsEgammaObjects
 
 #CXXFLAGS     += $(ROOTCFLAGS) -I$(INCLUDE_DIR) $(CMSSWFLAGS)  -fno-exceptions -I$(CMSSW_DATA_PATH)/../external/boost/1.47.0-cms/
-CXXFLAGS     += $(ROOTCFLAGS) -I$(INCLUDE_DIR) $(CMSSWFLAGS)  -fexceptions  -I$(CMSSW_DATA_PATH)/../external/boost/1.63.0/include
+CXXFLAGS     += $(ROOTCFLAGS) -I$(INCLUDE_DIR) $(CMSSWFLAGS)  -fexceptions  -I$(CMSSW_DATA_PATH)/../external/boost/1.63.0-omkpbe4/include -I/cvmfs/cms.cern.ch/slc6_amd64_gcc700/cms/vdt/0.4.0/include/
 
-LIBS          = $(ROOTLIBS) $(SYSLIBS) $(USERLIBS)
+LIBS          = $(ROOTLIBS) $(SYSLIBS) $(USERLIBS) $(CMSSWLIBS)
 GLIBS         = $(ROOTGLIBS) $(SYSLIBS)
 #LDFLAGS      += $(shell root-config --nonew --ldflags)
 LDFLAGS      += $(shell root-config --nonew ) -fno-exceptions
@@ -201,7 +201,8 @@ $(OBJ_DIR)/%.o: %.cc
 #	@echo "first dict $@" 
 #so I needed to put this in dict/PACKAGENAME/src, seemed path of least resistance
 	@test -d dict/$(PACKAGENAME)/src || mkdir -p dict/$(PACKAGENAME)/src
-	@rootcint  -f dict/$@ -c -I$(ROOFITSYS)/include -Iinclude packages/$(PACKAGENAME)/include/$(subst $(PACKAGENAME)/src/,,$*).hh packages/$(PACKAGENAME)/dict/$(subst $(PACKAGENAME)/src/,,$*)_LinkDef.h
+#now I allow ".h" or ".hh" hence the wild card
+	@rootcint  -f dict/$@ -c -I$(ROOFITSYS)/include -Iinclude $(wildcard packages/$(PACKAGENAME)/include/$(subst $(PACKAGENAME)/src/,,$*).*h) packages/$(PACKAGENAME)/dict/$(subst $(PACKAGENAME)/src/,,$*)_LinkDef.h
 
 #need to fix the include path in the generated header
 	@sed 's|/include/|/|g' < dict/$@ >$ dict/$@.tmp
