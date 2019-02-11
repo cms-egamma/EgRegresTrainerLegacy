@@ -10,6 +10,8 @@ class RegArgs:
         self.vars_name = "stdVar"  
         self.cfg_dir = "configs"
         self.out_dir = "results"
+        self.input_testing = "test.root"
+        self.input_training = "train.root"
         self.var_eb = "nrVert:sc.rawEnergy:sc.etaWidth:sc.phiWidth:sc.e3x3/sc.rawEnergy:sc.seedClusEnergy/sc.rawEnergy:sc.eMax/sc.rawEnergy:sc.e2nd/sc.rawEnergy:sc.eLeftRightDiffSumRatio:sc.eTopBottomDiffSumRatio:sc.sigmaIEtaIEta:sc.sigmaIEtaIPhi:sc.sigmaIPhiIPhi:sc.numberOfClusters:sc.clusterMaxDR:sc.clusterMaxDRDPhi:sc.clusterMaxDRDEta:sc.clusterMaxDRRawEnergy/sc.rawEnergy:clus1.clusterRawEnergy/sc.rawEnergy:clus2.clusterRawEnergy/sc.rawEnergy:clus3.clusterRawEnergy/sc.rawEnergy:clus1.clusterDPhiToSeed:clus2.clusterDPhiToSeed:clus3.clusterDPhiToSeed:clus1.clusterDEtaToSeed:clus2.clusterDEtaToSeed:clus3.clusterDEtaToSeed:sc.iEtaOrX:sc.iPhiOrY"
         self.var_ee = "nrVert:sc.rawEnergy:sc.etaWidth:sc.phiWidth:sc.e3x3/sc.rawEnergy:sc.seedClusEnergy/sc.rawEnergy:sc.eMax/sc.rawEnergy:sc.e2nd/sc.rawEnergy:sc.eLeftRightDiffSumRatio:sc.eTopBottomDiffSumRatio:sc.sigmaIEtaIEta:sc.sigmaIEtaIPhi:sc.sigmaIPhiIPhi:sc.numberOfClusters:sc.clusterMaxDR:sc.clusterMaxDRDPhi:sc.clusterMaxDRDEta:sc.clusterMaxDRRawEnergy/sc.rawEnergy:clus1.clusterRawEnergy/sc.rawEnergy:clus2.clusterRawEnergy/sc.rawEnergy:clus3.clusterRawEnergy/sc.rawEnergy:clus1.clusterDPhiToSeed:clus2.clusterDPhiToSeed:clus3.clusterDPhiToSeed:clus1.clusterDEtaToSeed:clus2.clusterDEtaToSeed:clus3.clusterDEtaToSeed:sc.iEtaOrX:sc.iPhiOrY:sc.seedEta"
         self.cuts_base = "(mc.energy>0 && sc.sigmaIEtaIEta>0 && sc.sigmaIPhiIPhi>0 && evt.eventnr%2==0)"
@@ -89,9 +91,11 @@ def run_eb_and_ee(regArgs):
     
 def main():
 
+    #modify the parameters as you wish and then re-run
+
     regArgs = RegArgs()
-    regArgs.input_training = "/mercury/data1/harper/regression/scRegTree/tree_1.root"
-    regArgs.input_testing = "/mercury/data1/harper/regression/scRegTree/allBar1.root"
+    regArgs.input_training = "/eos/cms/store/group/phys_egamma/EgRegression/SCReg/tree_1.root"
+    regArgs.input_testing = "/eos/cms/store/group/phys_egamma/EgRegression/SCReg/allBar1.root"
     regArgs.cfg_dir = "configs"
     regArgs.out_dir = "results"
     regArgs.cuts_name = "stdCutsAllEvts" 
