@@ -993,7 +993,7 @@ int DetIdTools::towerIdEndcap(int detId)
     fillEEToTowerIdMap(std::string(std::getenv("CMSSW_BASE"))+"/src/SHarper/SHNtupliser/data/CaloTowerEEGeometric.map");
   }
   if(eeDetIdToTowerId_.empty()){
-    LogErr <<" Warning, you didnt load in a tower map, I didnt find the default, so I'm now going to put a dummy entry in which will stop all warnings and just fail silently ";
+    //    LogErr <<" Warning, you didnt load in a tower map, I didnt find the default, so I'm now going to put a dummy entry in which will stop all warnings and just fail silently "; //commented out to not give a confusing warning to general users
     eeDetIdToTowerId_.push_back(std::make_pair<int,int>(0,0)); 
   }
   typedef std::vector<std::pair<int,int> >::const_iterator ConstIt;

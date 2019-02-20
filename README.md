@@ -13,17 +13,29 @@ First setup a CMSSW environment. We only link against this so we only need the C
 
 Then clone this repo into a location of your chosing. It does not have to be under $(CMSSW_BASE)/src, in fact it is better that it is not. 
 ```
-git clone git@github.com:cms-egamma/EgRegresTrainerLegacy/git
+git clone git@github.com:cms-egamma/EgRegresTrainerLegacy.git
 cd EgRegresTrainerLegacy 
 gmake RegressionTrainerExe -j 16
 gmake RegressionApplierExe -j 16
-edit scripts/runRegJob.py to your required parameters
-./scripts/runSCRegJob.py 
+./scripts/runSCRegJob.py  #edit scripts/runRegJob.py to your required parameters
 ```
 
 This will run the training sequence for the sc regression workflow, which is fairly generic. It first generates the configs expected by RegressionTrainerExe in the config directory (or optionally elsewhere) and then does the training outputing the results in the results directory. It then runs the testing job where it takes the testing input and then obtains the correction and resolution estimate. It is intended to use the outputed tree as a friend to the input tree.
 
 The training step will take all availible CPUs, ie if you have 24 cores, it'll automatically run 24 processes. The testing step runs over 4 threads which was emperically derived (this can be adjusted).
+
+Then to make an example resolution plot:
+```
+export ROOT_INCLUDE_PATH=$ROOT_INCLUDE_PATH:$PWD/include #otherwise will get header not found errors
+root rootScripts/setupExample.c
+hists = makeHists(regTestTree,{-3.0,-2.5,-2.,-1.6,-1.566,-1.4442,-1.1,-0.7,0.,0.7,1.1,1.4442,1.566,1.6,2.,2.5},150,0,1.5,{"sc.rawEnergy/mc.energy:sc.seedEta","sc.corrEnergy74X/mc.energy:sc.seedEta","regCorr.mean*sc.rawEnergy/mc.energy:sc.seedEta"},"mc.energy>0 && sc.sigmaIEtaIEta>0 && mc.dR<0.1 && mc.pt>20 && mc.pt<60");
+compareRes({hists[0],"raw energy"},{hists[1],"current energy"},{hists[2],"new energy"},6); //6 is the bin number, adjust as you like
+```
+
+Common issues:
+1) the environment variable needs to have the include subdirectory in it (export ROOT_INCLUDE_PATH=$ROOT_INCLUDE_PATH:$PWD/include  when you are in the main working directory) otherwise you will get header not found errors
+2) CMSSW not setup will cause this to crash. Again you dont need to be a sub directoy, just cmsenv in an appropriate area and then change to your working directory.
+
 
 ## build system 
 
