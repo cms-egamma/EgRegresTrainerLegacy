@@ -1,5 +1,5 @@
 Unix.*.Root.MacroPath:.:$(PWD)/rootScripts
-Unix*.Root.DynamicPath:.:$(PWD)/libs/Linux:$(LD_LIBRARY_PATH)
+Unix*.Root.DynamicPath:.:$(PWD)/libs/$SCRAM_ARCH:$(LD_LIBRARY_PATH)
 
 *.Root.Debug: 0
 *.Root.Stacktrace: no
