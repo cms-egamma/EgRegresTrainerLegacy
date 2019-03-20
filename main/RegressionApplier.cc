@@ -25,11 +25,13 @@ public:
   EvtData evt;
   float mean;
   float sigma;
+  float invTar;
     
   void createBranches(TTree* tree){
     tree->Branch("evt",&evt,evt.contents().c_str());
     tree->Branch("mean",&mean,"mean/F");
     tree->Branch("sigma",&sigma,"sigma/F");
+    tree->Branch("invTar",&invTar,"invTar/F");
   }
   
 };
@@ -106,6 +108,9 @@ int main(int argc, char** argv)
   };
   const std::string varsEB = readVarList(gbrFileEB,"varlistEB");
   const std::string varsEE = readVarList(gbrFileEE,"varlistEE");
+  const std::string* targetEB = reinterpret_cast<std::string*>(gbrFileEB->Get("targetEB"));
+  const std::string* targetEE = reinterpret_cast<std::string*>(gbrFileEE->Get("targetEE"));
+ 
   GBRForestD* gbrMeanEB = reinterpret_cast<GBRForestD*>(gbrFileEB->Get("EBCorrection"));
   GBRForestD* gbrSigmaEB = reinterpret_cast<GBRForestD*>(gbrFileEB->Get("EBUncertainty"));
   GBRForestD* gbrMeanEE = reinterpret_cast<GBRForestD*>(gbrFileEE->Get("EECorrection"));
@@ -122,8 +127,8 @@ int main(int argc, char** argv)
     return 0;
   }
 
-  const auto regDataEBAll = HistFuncs::readTree(inTree,varsEB,"");
-  const auto regDataEEAll = HistFuncs::readTree(inTree,varsEE,"");
+  const auto regDataEBAll = HistFuncs::readTree(inTree,varsEB+":"+*targetEB,"");
+  const auto regDataEEAll = HistFuncs::readTree(inTree,varsEE+":"+*targetEE,"");
   const auto evtData = HistFuncs::readTree(inTree,"runnr:eventnr:lumiSec:sc.isEB","");
   fillTree(regDataEBAll,regDataEEAll,evtData,{gbrMeanEB,gbrSigmaEB},{gbrMeanEE,gbrMeanEE},
 	   outTreeData,outTree,nrThreads);
@@ -184,6 +189,7 @@ void fillTree(const std::vector<std::vector<float> >& regDataEB,
 	outTreeData.evt.lumiSec=evtDataEntry[2];
 	outTreeData.mean = regResult.first;
 	outTreeData.sigma = regResult.second;
+	outTreeData.invTar = evtDataEntry[3] ? 1./regDataEB[entryNr].back() : 1./regDataEE[entryNr].back();
 	threadEntryNrs[threadNr]+=nrThreads;
 	initThread(threadNr);
 
@@ -216,7 +222,6 @@ std::pair<double,double> getRes(const std::vector<float>& regData,const std::pai
   //apply transformation to limited output range (matching the training)
   double mean = meanoffset + meanscale*vdt::fast_sin(rawmean);
   double sigma = sigmaoffset + sigmascale*vdt::fast_sin(rawsigma);
-  
   return {mean,sigma};
 }
 

@@ -468,6 +468,7 @@ void HybridGBRMaker::runEB(const string& cutBase, const string& cutEB, const str
     // Write input variable names
     TFile* fileOut = TFile::Open(m_fileOutName.c_str(), "UPDATE");
     fileOut->WriteObject(&m_variablesEB, "varlistEB");
+    fileOut->WriteObject(&m_target,"targetEB");
     //if(m_doCombine)
     //m_fileOut->WriteObject(&m_variablesComb, "varlistComb");
     m_forestEBmean = new GBRForestD(*sigmeantEB->Forest());
@@ -718,6 +719,7 @@ void HybridGBRMaker::runEE(const string& cutBase, const string& cutEE, const str
     m_forestEEwidth = new GBRForestD(*sigwidthtEE->Forest());
     fileOut->WriteObject(m_forestEEmean,"EECorrection");
     fileOut->WriteObject(m_forestEEwidth,"EEUncertainty");
+    fileOut->WriteObject(&m_target,"targetEE");
     fileOut->Close();
 
     weregEE.writeToFile(m_fileOutName.c_str(), false);    
