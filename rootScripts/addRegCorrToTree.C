@@ -8,7 +8,7 @@ void addRegCorrToTree(const std::string& treeName,const std::string& inFilename,
 {
   
   TTree* inTree = HistFuncs::makeChain(treeName,inFilename);
-  TTree* corrTree = HistFuncs::makeChain("een_analyzer/ClusterTree",corrFilename);
+  TTree* corrTree = HistFuncs::makeChain(treeName,corrFilename);
   
   TFile* outFile = TFile::Open(outFilename.c_str(),"RECREATE");
   TTree* outTree = inTree->CloneTree();
@@ -27,7 +27,7 @@ void addRegCorrToTree(const std::string& treeName,const std::string& inFilename,
     corrTree->GetEntry(entryNr);
     outMeanBranch->Fill();
     outSigmaBranch->Fill();
-    outInvVarBranch->Fill();
+    outInvTarBranch->Fill();
   }
   
   outFile->Write();
