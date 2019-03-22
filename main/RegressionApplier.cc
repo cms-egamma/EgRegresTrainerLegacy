@@ -68,14 +68,15 @@ int main(int argc, char** argv)
   char gbrFilenameEE[1024];
   char treeName[1024];
   int nrThreads;
-  
+  bool writeFullTree;
   CmdLineInt cmdLineInt(argv[0]);
   cmdLineInt.addNonOption(inFilename,true," ","input files");
   cmdLineInt.addNonOption(outFilename,true," ","output filename");
   cmdLineInt.addOption("gbrForestFileEB",gbrFilenameEB,"test.root","gbrForestFile for barrel");
   cmdLineInt.addOption("gbrForestFileEE",gbrFilenameEE,"test.root","gbrForestFile for endcap");
   cmdLineInt.addOption("nrThreads",&nrThreads,1,"number of threads for reading tree");
-  cmdLineInt.addOption("treeName",treeName,"een_analyzer/ClusterTree"," name of the tree");
+  cmdLineInt.addOption("treeName",treeName,"egRegTree"," name of the tree");
+  cmdLineInt.addOption("writeFullTree",&writeFullTree,false," writes the full tree to file");
   if(!cmdLineInt.processCmdLine(argc,argv)) return 0; //exit if we havnt managed to get required parameters
   //this appears to do very little...
   if(nrThreads>1){
@@ -84,9 +85,7 @@ int main(int argc, char** argv)
 
   TTree* inTree = HistFuncs::makeChain(treeName,inFilename);
   TFile* outFile = new TFile(outFilename,"RECREATE");
-  outFile->mkdir("een_analyzer");
-  outFile->cd("een_analyzer");
-  TTree* outTree = new TTree("ClusterTree","");
+  TTree* outTree = new TTree((std::string(treeName)+"Friend").c_str(),"");
     
   TreeData outTreeData;
   outTreeData.createBranches(outTree);
@@ -132,11 +131,27 @@ int main(int argc, char** argv)
   const auto evtData = HistFuncs::readTree(inTree,"runnr:eventnr:lumiSec:sc.isEB","");
   fillTree(regDataEBAll,regDataEEAll,evtData,{gbrMeanEB,gbrSigmaEB},{gbrMeanEE,gbrMeanEE},
 	   outTreeData,outTree,nrThreads);
-  
+
+
   outFile->Write();
 
-
-
+  if(writeFullTree){
+    outFile->cd();
+    TTree* fullTree = inTree->CloneTree();
+    TBranch* fullMeanBranch=fullTree->Branch("regMean",&outTreeData.mean);
+    TBranch* fullSigmaBranch=fullTree->Branch("regSigma",&outTreeData.sigma);
+    TBranch* fullInvTarBranch=fullTree->Branch("regInvTar",&outTreeData.invTar);
+  
+    int nrEntries = outTree->GetEntries();
+    std::cout <<"entryies "<<nrEntries<<std::endl;
+    for(int entryNr=0;entryNr<nrEntries;entryNr++){
+      outTree->GetEntry(entryNr);
+      fullMeanBranch->Fill();
+      fullSigmaBranch->Fill();
+      fullInvTarBranch->Fill();
+    }
+  }
+  outFile->Write();
   return 0;
 }
 
