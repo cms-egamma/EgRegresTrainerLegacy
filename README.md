@@ -15,8 +15,8 @@ Then clone this repo into a location of your chosing. It does not have to be und
 ```
 git clone git@github.com:cms-egamma/EgRegresTrainerLegacy.git
 cd EgRegresTrainerLegacy 
-gmake RegressionTrainerExe -j 16
-gmake RegressionApplierExe -j 16
+gmake RegressionTrainerExe -j 8
+gmake RegressionApplierExe -j 8
 ./scripts/runSCRegJob.py  #edit scripts/runRegJob.py to your required parameters
 ```
 
