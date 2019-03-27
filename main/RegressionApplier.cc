@@ -33,7 +33,12 @@ public:
     tree->Branch("sigma",&sigma,"sigma/F");
     tree->Branch("invTar",&invTar,"invTar/F");
   }
-  
+  void setBranchAddresses(TTree* tree){
+    tree->SetBranchAddress("evt",&evt);
+    tree->SetBranchAddress("mean",&mean);
+    tree->SetBranchAddress("sigma",&sigma);
+    tree->SetBranchAddress("invTar",&invTar);
+  }
 };
 
 std::pair<double,double> getRes(const std::vector<float>& regData,const std::pair<const GBRForestD*,const GBRForestD*>& gbrForest);
@@ -67,6 +72,7 @@ int main(int argc, char** argv)
   char gbrFilenameEB[1024];
   char gbrFilenameEE[1024];
   char treeName[1024];
+  char regOutTagChar[1024];
   int nrThreads;
   bool writeFullTree;
   CmdLineInt cmdLineInt(argv[0]);
@@ -76,12 +82,11 @@ int main(int argc, char** argv)
   cmdLineInt.addOption("gbrForestFileEE",gbrFilenameEE,"test.root","gbrForestFile for endcap");
   cmdLineInt.addOption("nrThreads",&nrThreads,1,"number of threads for reading tree");
   cmdLineInt.addOption("treeName",treeName,"egRegTree"," name of the tree");
+  cmdLineInt.addOption("regOutTag",regOutTagChar,"","tag of the output regression branches , eg \"reg{regOutTagChar}Mean\" if writing full tree");
   cmdLineInt.addOption("writeFullTree",&writeFullTree,false," writes the full tree to file");
   if(!cmdLineInt.processCmdLine(argc,argv)) return 0; //exit if we havnt managed to get required parameters
-  //this appears to do very little...
-  if(nrThreads>1){
-    ROOT::EnableImplicitMT(nrThreads);
-  }
+ 
+  const std::string regOutTag(regOutTagChar);
 
   TTree* inTree = HistFuncs::makeChain(treeName,inFilename);
   TFile* outFile = new TFile(outFilename,"RECREATE");
@@ -129,29 +134,34 @@ int main(int argc, char** argv)
   const auto regDataEBAll = HistFuncs::readTree(inTree,varsEB+":"+*targetEB,"");
   const auto regDataEEAll = HistFuncs::readTree(inTree,varsEE+":"+*targetEE,"");
   const auto evtData = HistFuncs::readTree(inTree,"runnr:eventnr:lumiSec:sc.isEB","");
-  fillTree(regDataEBAll,regDataEEAll,evtData,{gbrMeanEB,gbrSigmaEB},{gbrMeanEE,gbrMeanEE},
+  fillTree(regDataEBAll,regDataEEAll,evtData,{gbrMeanEB,gbrSigmaEB},{gbrMeanEE,gbrSigmaEE},
 	   outTreeData,outTree,nrThreads);
 
 
   outFile->Write();
+  delete outFile;
+  delete gbrFileEB;
+  delete gbrFileEE;
 
   if(writeFullTree){
-    outFile->cd();
+    outFile = new TFile(outFilename,"UPDATE");
+    outTree = static_cast<TTree*>(outFile->Get((std::string(treeName)+"Friend").c_str()));
+    outTreeData.setBranchAddresses(outTree);
     TTree* fullTree = inTree->CloneTree();
-    TBranch* fullMeanBranch=fullTree->Branch("regMean",&outTreeData.mean);
-    TBranch* fullSigmaBranch=fullTree->Branch("regSigma",&outTreeData.sigma);
-    TBranch* fullInvTarBranch=fullTree->Branch("regInvTar",&outTreeData.invTar);
+    TBranch* fullMeanBranch=fullTree->Branch(("reg"+regOutTag+"Mean").c_str(),&outTreeData.mean);
+    TBranch* fullSigmaBranch=fullTree->Branch(("reg"+regOutTag+"Sigma").c_str(),&outTreeData.sigma);
+    TBranch* fullInvTarBranch=fullTree->Branch(("reg"+regOutTag+"InvTar").c_str(),&outTreeData.invTar);
   
     int nrEntries = outTree->GetEntries();
-    std::cout <<"entryies "<<nrEntries<<std::endl;
     for(int entryNr=0;entryNr<nrEntries;entryNr++){
       outTree->GetEntry(entryNr);
       fullMeanBranch->Fill();
       fullSigmaBranch->Fill();
       fullInvTarBranch->Fill();
     }
+    outFile->Write();
   }
-  outFile->Write();
+
   return 0;
 }
 
@@ -180,38 +190,45 @@ void fillTree(const std::vector<std::vector<float> >& regDataEB,
       auto& regData = evtData[entryNr][3] ? regDataEB[entryNr] : regDataEE[entryNr];
       auto& gbrForest = evtData[entryNr][3] ? gbrForestEB : gbrForestEE;
       threads[threadNr] = std::async(getRes,regData,gbrForest);
-    }
+      return true;
+    }else return false;
   };
-  
-  for(size_t threadNr=0;threadNr<threads.size();threadNr++) initThread(threadNr);
-  
 
-  bool anyThreadActive = true;
-  while(anyThreadActive){
-    anyThreadActive = false;
-    for(unsigned int threadNr=0;threadNr<nrThreads;threadNr++){
-      if(threads[threadNr].valid()){
-	anyThreadActive = true;
-	
-	auto regResult = threads[threadNr].get();
-	
-	auto entryNr = threadEntryNrs[threadNr];
-	if(entryNr%100000==0) std::cout <<"entry "<<entryNr<< "/" <<regDataEB.size()<<" time "<<timer<<std::endl;
-   
-	const auto& evtDataEntry = evtData[entryNr];
-	outTreeData.evt.runnr=evtDataEntry[0];
-	outTreeData.evt.eventnr=evtDataEntry[1];
-	outTreeData.evt.lumiSec=evtDataEntry[2];
-	outTreeData.mean = regResult.first;
-	outTreeData.sigma = regResult.second;
-	outTreeData.invTar = evtDataEntry[3] ? 1./regDataEB[entryNr].back() : 1./regDataEE[entryNr].back();
-	threadEntryNrs[threadNr]+=nrThreads;
-	initThread(threadNr);
+  unsigned int nrActiveThreads=0;
+  for(size_t threadNr=0;threadNr<threads.size();threadNr++){
+    if(initThread(threadNr)) nrActiveThreads = threadNr+1; //works as in increasing threadnr
+  }
 
-	outTree->Fill();
+  //we want to read them in order so we wait for each thread to be done
+  while(nrActiveThreads!=0){
+    unsigned int newNrActiveThreads = 0;
+    threads[0].wait();
+ 
+    for(unsigned int threadNr=0;threadNr<nrActiveThreads;threadNr++){
+      threads[threadNr].wait();	
+      auto regResult = threads[threadNr].get();
 	
-      }
+      auto entryNr = threadEntryNrs[threadNr];
+      if(entryNr%100000==0) std::cout <<"entry "<<entryNr<< "/" <<regDataEB.size()<<" time "<<timer<<std::endl;
+      
+      // if(!evtData[entryNr][3] && regResult.second>0.2 && regResult.second<0.3){
+      //  	std::cout <<"dumping reg data "<<evtData[entryNr][1]<<" isEB "<<evtData[entryNr][3]<<std::endl;
+      //  	for(size_t i=0;i<regDataEE[entryNr].size();i++){
+      //  	  std::cout <<"   "<<i<<" "<<regDataEE[entryNr][i]<<std::endl;
+      // 	}
+      // }
+      const auto& evtDataEntry = evtData[entryNr];
+      outTreeData.evt.runnr=evtDataEntry[0];
+      outTreeData.evt.eventnr=evtDataEntry[1];
+      outTreeData.evt.lumiSec=evtDataEntry[2];
+      outTreeData.mean = regResult.first;
+      outTreeData.sigma = regResult.second;
+      outTreeData.invTar = evtDataEntry[3] ? 1./regDataEB[entryNr].back() : 1./regDataEE[entryNr].back();
+      outTree->Fill();	
+      threadEntryNrs[threadNr]+=nrThreads;
+      if(initThread(threadNr)) newNrActiveThreads = threadNr+1;
     }
+    nrActiveThreads = newNrActiveThreads;
   }
 }
 
