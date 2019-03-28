@@ -10,8 +10,14 @@ class RegArgs:
         self.vars_name = "stdVar"  
         self.cfg_dir = "configs"
         self.out_dir = "results"
+        self.tree = "egRegTree"
+        self.minEvents = 300
+        self.shrinkage = 0.15
+        self.minSignificance = 5.0
+        self.eventWeight = 1.
         self.input_testing = "test.root"
         self.input_training = "train.root"
+        self.target = "mc.energy/(sc.rawEnergy + sc.rawESEnergy)"
         self.var_eb = ':'.join(["sc.rawEnergy","sc.etaWidth","sc.phiWidth","sc.seedClusEnergy/sc.rawEnergy","ssFull.e5x5/sc.rawEnergy","ele.hademTow",
                                 "rho","sc.dEtaSeedSC","sc.dPhiSeedSC","ssFull.e3x3/sc.rawEnergy","ssFull.sigmaIEtaIEta","ssFull.sigmaIEtaIPhi","ssFull.sigmaIPhiIPhi",
                                 "ssFull.eMax/ssFull.e5x5","ssFull.e2nd/ssFull.e5x5","ssFull.eTop/ssFull.e5x5","ssFull.eBottom/ssFull.e5x5","ssFull.eLeft*ssFull.e5x5","ssFull.eRight*ssFull.e5x5",
@@ -54,22 +60,17 @@ TMVAFactoryOptions: !V:!Silent:!Color:!DrawProgressBar
 OutputDirectory: {args.out_dir}
 Regression.1.Name: {name}
 Regression.1.InputFiles: {args.input_training}
-Regression.1.Tree: egRegTree
-Regression.1.Method: BDT
+Regression.1.Tree: {args.tree}
 Regression.1.trainingOptions: SplitMode=random:!V
-Regression.1.Options: MinEvents=300:Shrinkage=0.15:NTrees={args.ntrees}:MinSignificance=5.0:EventWeight=1
-Regression.1.DoErrors: True
+Regression.1.Options: MinEvents={args.minEvents}:Shrinkage={args.shrinkage}:NTrees={args.ntrees}:MinSignificance={args.minSignificance}:EventWeight={args.eventWeight}
 Regression.1.DoCombine: False
 Regression.1.DoEB: {args.do_eb}
 Regression.1.VariablesEB: {args.var_eb}
 Regression.1.VariablesEE: {args.var_ee}
-Regression.1.Target: mc.energy / ( sc.rawEnergy + sc.rawESEnergy  )
-Regression.1.TargetError: 1.253*abs( BDTresponse - mc.energy / ( sc.rawEnergy + sc.rawESEnergy ) )
-Regression.1.HistoConfig: jobs/dummy_Histo.config
+Regression.1.Target: {args.target}
 Regression.1.CutBase: {args.cuts_base} 
 Regression.1.CutEB: sc.isEB
 Regression.1.CutEE: !sc.isEB
-Regression.1.CutError: {args.cuts_base}
 
 """.format(args=args,name=args.name())
     if not os.path.isdir(args.cfg_dir):
@@ -104,21 +105,18 @@ def main():
     #modify the parameters as you wish and then re-run
 
     regArgs = RegArgs()
-    regArgs.input_training = "/mercury/data1/harper/BParking_pt1To30Ntup/doubleElectron_FlatPt-1To300_FlatPU0to70RAW_102X_upgrade2018_realistic_v15-v1_BParkRECO_ntup.root"
-    regArgs.input_testing = "/mercury/data1/harper/BParking_pt1To30Ntup/doubleElectron_FlatPt-1To300_FlatPU0to70RAW_102X_upgrade2018_realistic_v15-v1_BParkRECO_ntup.root"
+    regArgs.input_training = "/mercury/data1/harper/BParking_pt1To30Ntup/doubleElectron_FlatPt-1To300_FlatPU0to70RAWIDEALIC_102X_upgrade2018_realistic_v15-v1_BParkRECO_ntup.root"
+    regArgs.input_testing = "/mercury/data1/harper/BParking_pt1To30Ntup/doubleElectron_FlatPt-1To300_FlatPU0to70RAWIDEALIC_102X_upgrade2018_realistic_v15-v1_BParkRECO_ntup.root"
+    regArgs.input_training = "test.root"
+    regArgs.input_testing = "test.root"
+    regArgs.target = "1./(regInvTar*regMean)"
     regArgs.cfg_dir = "configs"
-    regArgs.out_dir = "results"
+    regArgs.out_dir = "results" 
     regArgs.ntrees = 1500
-  #  regArgs.vars_name = "stdVarsNoWidth"
- #   regArgs.var_eb = "nrVert:sc.rawEnergy:sc.e3x3/sc.rawEnergy:sc.seedClusEnergy/sc.rawEnergy:sc.eMax/sc.rawEnergy:sc.e2nd/sc.rawEnergy:sc.eLeftRightDiffSumRatio:sc.eTopBottomDiffSumRatio:sc.sigmaIEtaIEta:sc.sigmaIEtaIPhi:sc.sigmaIPhiIPhi:sc.numberOfClusters:sc.clusterMaxDR:sc.clusterMaxDRDPhi:sc.clusterMaxDRDEta:sc.clusterMaxDRRawEnergy/sc.rawEnergy:clus1.clusterRawEnergy/sc.rawEnergy:clus2.clusterRawEnergy/sc.rawEnergy:clus3.clusterRawEnergy/sc.rawEnergy:clus1.clusterDPhiToSeed:clus2.clusterDPhiToSeed:clus3.clusterDPhiToSeed:clus1.clusterDEtaToSeed:clus2.clusterDEtaToSeed:clus3.clusterDEtaToSeed:sc.iEtaOrX:sc.iPhiOrY"
-#    regArgs.var_ee = "nrVert:sc.rawEnergy:sc.e3x3/sc.rawEnergy:sc.seedClusEnergy/sc.rawEnergy:sc.eMax/sc.rawEnergy:sc.e2nd/sc.rawEnergy:sc.eLeftRightDiffSumRatio:sc.eTopBottomDiffSumRatio:sc.sigmaIEtaIEta:sc.sigmaIEtaIPhi:sc.sigmaIPhiIPhi:sc.numberOfClusters:sc.clusterMaxDR:sc.clusterMaxDRDPhi:sc.clusterMaxDRDEta:sc.clusterMaxDRRawEnergy/sc.rawEnergy:clus1.clusterRawEnergy/sc.rawEnergy:clus2.clusterRawEnergy/sc.rawEnergy:clus3.clusterRawEnergy/sc.rawEnergy:clus1.clusterDPhiToSeed:clus2.clusterDPhiToSeed:clus3.clusterDPhiToSeed:clus1.clusterDEtaToSeed:clus2.clusterDEtaToSeed:clus3.clusterDEtaToSeed:sc.iEtaOrX:sc.iPhiOrY:seedEta"
-   # regArgs.vars_name = "stdVarsNoWidthNoSigma"
-   # regArgs.var_eb = "nrVert:sc.rawEnergy:sc.e3x3/sc.rawEnergy:sc.seedClusEnergy/sc.rawEnergy:sc.eMax/sc.rawEnergy:sc.e2nd/sc.rawEnergy:sc.eLeftRightDiffSumRatio:sc.eTopBottomDiffSumRatio:sc.numberOfClusters:sc.clusterMaxDR:sc.clusterMaxDRDPhi:sc.clusterMaxDRDEta:sc.clusterMaxDRRawEnergy/sc.rawEnergy:clus1.clusterRawEnergy/sc.rawEnergy:clus2.clusterRawEnergy/sc.rawEnergy:clus3.clusterRawEnergy/sc.rawEnergy:clus1.clusterDPhiToSeed:clus2.clusterDPhiToSeed:clus3.clusterDPhiToSeed:clus1.clusterDEtaToSeed:clus2.clusterDEtaToSeed:clus3.clusterDEtaToSeed:sc.iEtaOrX:sc.iPhiOrY"
-    #regArgs.var_ee = "nrVert:sc.rawEnergy:sc.e3x3/sc.rawEnergy:sc.seedClusEnergy/sc.rawEnergy:sc.eMax/sc.rawEnergy:sc.e2nd/sc.rawEnergy:sc.eLeftRightDiffSumRatio:sc.eTopBottomDiffSumRatio:sc.numberOfClusters:sc.clusterMaxDR:sc.clusterMaxDRDPhi:sc.clusterMaxDRDEta:sc.clusterMaxDRRawEnergy/sc.rawEnergy:clus1.clusterRawEnergy/sc.rawEnergy:clus2.clusterRawEnergy/sc.rawEnergy:clus3.clusterRawEnergy/sc.rawEnergy:clus1.clusterDPhiToSeed:clus2.clusterDPhiToSeed:clus3.clusterDPhiToSeed:clus1.clusterDEtaToSeed:clus2.clusterDEtaToSeed:clus3.clusterDEtaToSeed:sc.iEtaOrX:sc.iPhiOrY:seedEta"
+    regArgs.vars_name = "stdVarsIDEALTest"
 
-  #  regArgs.vars_name = "stdVarsNoWidthNoSigma"
-   # regArgs.var_eb = "nrVert:sc.rawEnergy:sc.e3x3/sc.rawEnergy:sc.seedClusEnergy/sc.rawEnergy:sc.eMax/sc.rawEnergy:sc.e2nd/sc.rawEnergy:sc.eLeftRightDiffSumRatio:sc.eTopBottomDiffSumRatio:sc.numberOfClusters:sc.clusterMaxDR:sc.clusterMaxDRDPhi:sc.clusterMaxDRDEta:sc.clusterMaxDRRawEnergy/sc.rawEnergy:clus1.clusterRawEnergy/sc.rawEnergy:clus2.clusterRawEnergy/sc.rawEnergy:clus3.clusterRawEnergy/sc.rawEnergy:clus1.clusterDPhiToSeed:clus2.clusterDPhiToSeed:clus3.clusterDPhiToSeed:clus1.clusterDEtaToSeed:clus2.clusterDEtaToSeed:clus3.clusterDEtaToSeed:sc.iEtaOrX:sc.iPhiOrY"
-  #  regArgs.var_ee = "nrVert:sc.rawEnergy:sc.e3x3/sc.rawEnergy:sc.seedClusEnergy/sc.rawEnergy:sc.eMax/sc.rawEnergy:sc.e2nd/sc.rawEnergy:sc.eLeftRightDiffSumRatio:sc.eTopBottomDiffSumRatio:sc.numberOfClusters:sc.clusterMaxDR:sc.clusterMaxDRDPhi:sc.clusterMaxDRDEta:sc.clusterMaxDRRawEnergy/sc.rawEnergy:clus1.clusterRawEnergy/sc.rawEnergy:clus2.clusterRawEnergy/sc.rawEnergy:clus3.clusterRawEnergy/sc.rawEnergy:clus1.clusterDPhiToSeed:clus2.clusterDPhiToSeed:clus3.clusterDPhiToSeed:clus1.clusterDEtaToSeed:clus2.clusterDEtaToSeed:clus3.clusterDEtaToSeed:sc.iEtaOrX:sc.iPhiOrY:seedEta"
+    
+    
     run_eb_and_ee(regArgs=regArgs)
     
 if __name__ =='__main__':
