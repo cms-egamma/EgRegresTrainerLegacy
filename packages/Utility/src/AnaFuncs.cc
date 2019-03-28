@@ -5,6 +5,7 @@
 #include <limits>
 #include <cstring>
 #include <sstream>
+#include <ios>
 
 #include "Utility/DetIdTools.hh" //hack which doesnt belong here
 
@@ -868,4 +869,25 @@ std::string AnaFuncs::convertToTTreeStr(double val) //for -ve vals, string is M 
   }
   if(val<0) valStr.replace(0,1,"M");
   return valStr;
+}
+
+//does not handle scientific notation
+bool AnaFuncs::isNumber(const std::string& str)
+{
+  // if(str.empty()) return false;
+  // else{
+  //   size_t start = 0;
+  //   if(str[0]=='-') start=1;
+  //   int nrDecPoints = 0;
+  //   for(size_t i=start;i<str.size();i++){
+  //     if(str[i]=='.') nrDecPoints++;
+  //     else if(!::isdigit(str[i])) return false;
+  //     if(nrDecPoints>1) return false;
+  //   }
+  //   return true;
+  // }
+  std::stringstream ss(str);
+  float f;
+  //  return bool(ss>>f);
+  return !((ss >> std::noskipws >> f).rdstate() ^ std::ios_base::eofbit);
 }
