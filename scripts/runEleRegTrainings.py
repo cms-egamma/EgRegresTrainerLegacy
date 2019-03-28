@@ -31,7 +31,7 @@ class RegArgs:
                                 "ssFull.e2x5Max/ssFull.e5x5","ssFull.e2x5Left/ssFull.e5x5","ssFull.e2x5Right/ssFull.e5x5","ssFull.e2x5Top/ssFull.e5x5","ssFull.e2x5Bottom/ssFull.e5x5",
                                 "ele.nrSatCrys","sc.numberOfClusters","sc.iEtaOrX","sc.iPhiOrY","sc.rawESEnergy/sc.rawEnergy"])
 
-        self.cuts_base = "(mc.energy>0 && ssFull.sigmaIEtaIEta>0 && ssFull.sigmaIPhiIPhi>0 && ele.et>0 && eventnr%2==0)"
+        self.cuts_base = "(mc.energy>0 && ssFull.sigmaIEtaIEta>0 && ssFull.sigmaIPhiIPhi>0 && ele.et>0 && evt.eventnr%2==0)"
         self.ntrees = 1500
         self.do_eb = True
 
@@ -106,7 +106,7 @@ def main():
     #step 1, run calo only regression and stick it into a tree so it can be used for ecal-trk combination
     #step 2, put apply the regresion to the real IC and save the result in a tree
     #step 3, run trk-calo regression
-    run_step1 = False
+    run_step1 = True
     run_step2 = True
     run_step3 = True
 
