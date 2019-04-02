@@ -110,9 +110,8 @@ def main():
     run_step2 = True
     run_step3 = True
 
-    input_ideal_ic  = "/mercury/data1/harper/BParking_pt1To30Ntup/doubleElectron_FlatPt-1To300_FlatPU0to70RAWIDEALIC_102X_upgrade2018_realistic_v15-v1_BParkRECO_ntupV3.root"
-    input_real_ic = "/mercury/data1/harper/BParking_pt1To30Ntup/doubleElectron_FlatPt-1To300_FlatPU0to70RAW_102X_upgrade2018_realistic_v15-v1_BParkRECO_ntupV3.root"
-
+    input_ideal_ic  = "/eos/cms/store/group/phys_egamma/EgRegression/DoubleElectron_FlatPt-1To300/2018-Prompt-IDEALIC/EgRegTreeV1/DoubleElectron_FlatPt-1To300_ntuples_FlatPU0to70IdealECAL_102X_upgrade2018_realistic_forECAL_v15-v1_EgRegTreeV1_1.root"
+    input_real_ic = "/eos/cms/store/group/phys_egamma/EgRegression/DoubleElectron_FlatPt-1To300/2018-Prompt/EgRegTreeV1/DoubleElectron_FlatPt-1To300_ntuples_FlatPU0to70RAW_102X_upgrade2018_realistic_v15-v1_EgRegTreeV1_1.root"
     #step1 train the calo only regression using IDEAL intercalibration constants
     regArgs = RegArgs()
     regArgs.input_training = str(input_ideal_ic)
@@ -121,7 +120,7 @@ def main():
     regArgs.cfg_dir = "configs"
     regArgs.out_dir = "results" 
     regArgs.ntrees = 1500  
-    regArgs.base_name = "regEleBParkingIDEALECAL"
+    regArgs.base_name = "regEleIDEALECAL"
     if run_step1: run_eb_and_ee(regArgs=regArgs)
     
     #step2 now we run over the REAL intercalibration constant data and make a rew tree with this regression included
@@ -130,13 +129,13 @@ def main():
     regArgs.do_eb = False
     forest_ee_file = regArgs.output_name()
 
-    regArgs.base_name = "regEleBParkingECAL_IDEALTraining"
+    regArgs.base_name = "regEleECALIDEALTraining"
     input_for_comb = str(regArgs.applied_name()) #save the output name before we change it
     if run_step2: subprocess.Popen(["bin/slc6_amd64_gcc700/RegressionApplierExe",input_real_ic,input_for_comb,"--gbrForestFileEE",forest_ee_file,"--gbrForestFileEB",forest_eb_file,"--nrThreads","4","--treeName",regArgs.tree_name,"--writeFullTree","1","--regOutTag","Ecal"]).communicate()
     
 
     #step3 do the E/p combination
-    regArgs.base_name = "regEleBParkingIDEALECALTrk"
+    regArgs.base_name = "regEleIDEALECALTrk"
     regArgs.var_eb =":".join(["(sc.rawEnergy+sc.rawESEnergy)*regEcalMean","regEcalSigma/regEcalMean","ele.trkPModeErr/ele.trkPMode","(sc.rawEnergy+sc.rawESEnergy)*regEcalMean/ele.trkPMode","ele.ecalDrivenSeed","ssFull.e3x3/sc.rawEnergy","ele.fbrem","ele.trkEtaMode","ele.trkPhiMode"])
     regArgs.var_ee =":".join(["(sc.rawEnergy+sc.rawESEnergy)*regEcalMean","regEcalSigma/regEcalMean","ele.trkPModeErr/ele.trkPMode","(sc.rawEnergy+sc.rawESEnergy)*regEcalMean/ele.trkPMode","ele.ecalDrivenSeed","ssFull.e3x3/sc.rawEnergy","ele.fbrem","ele.trkEtaMode","ele.trkPhiMode"])
     regArgs.target = "(mc.energy * (ele.trkPModeErr*ele.trkPModeErr + (sc.rawEnergy+sc.rawESEnergy)*(sc.rawEnergy+sc.rawESEnergy)*regEcalSigma*regEcalSigma) / ( (sc.rawEnergy+sc.rawESEnergy)*regEcalMean*ele.trkPModeErr*ele.trkPModeErr + ele.trkPMode*(sc.rawEnergy+sc.rawESEnergy)*(sc.rawEnergy+sc.rawESEnergy)*regEcalSigma*regEcalSigma ))"
