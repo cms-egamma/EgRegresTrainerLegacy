@@ -5,16 +5,26 @@ import os
 
 class RegArgs:
     def set_defaults(self):
-        self.base_name = "reg_sc"
+        self.base_name = "reg_eleBParking"
         self.cuts_name = "stdCuts"
         self.vars_name = "stdVar"  
         self.cfg_dir = "configs"
         self.out_dir = "results"
         self.input_testing = "test.root"
         self.input_training = "train.root"
-        self.var_eb = "nrVert:sc.rawEnergy:sc.etaWidth:sc.phiWidth:ssFrac.e3x3/sc.rawEnergy:sc.seedClusEnergy/sc.rawEnergy:ssFrac.eMax/sc.rawEnergy:ssFrac.e2nd/sc.rawEnergy:ssFrac.eLeftRightDiffSumRatio:ssFrac.eTopBottomDiffSumRatio:ssFrac.sigmaIEtaIEta:ssFrac.sigmaIEtaIPhi:ssFrac.sigmaIPhiIPhi:sc.numberOfClusters:sc.clusterMaxDR:sc.clusterMaxDRDPhi:sc.clusterMaxDRDEta:sc.clusterMaxDRRawEnergy/sc.rawEnergy:clus1.clusterRawEnergy/sc.rawEnergy:clus2.clusterRawEnergy/sc.rawEnergy:clus3.clusterRawEnergy/sc.rawEnergy:clus1.clusterDPhiToSeed:clus2.clusterDPhiToSeed:clus3.clusterDPhiToSeed:clus1.clusterDEtaToSeed:clus2.clusterDEtaToSeed:clus3.clusterDEtaToSeed:sc.iEtaOrX:sc.iPhiOrY"  
-        self.var_ee = "nrVert:sc.rawEnergy:sc.etaWidth:sc.phiWidth:ssFrac.e3x3/sc.rawEnergy:sc.seedClusEnergy/sc.rawEnergy:ssFrac.eMax/sc.rawEnergy:ssFrac.e2nd/sc.rawEnergy:ssFrac.eLeftRightDiffSumRatio:ssFrac.eTopBottomDiffSumRatio:ssFrac.sigmaIEtaIEta:ssFrac.sigmaIEtaIPhi:ssFrac.sigmaIPhiIPhi:sc.numberOfClusters:sc.clusterMaxDR:sc.clusterMaxDRDPhi:sc.clusterMaxDRDEta:sc.clusterMaxDRRawEnergy/sc.rawEnergy:clus1.clusterRawEnergy/sc.rawEnergy:clus2.clusterRawEnergy/sc.rawEnergy:clus3.clusterRawEnergy/sc.rawEnergy:clus1.clusterDPhiToSeed:clus2.clusterDPhiToSeed:clus3.clusterDPhiToSeed:clus1.clusterDEtaToSeed:clus2.clusterDEtaToSeed:clus3.clusterDEtaToSeed:sc.iEtaOrX:sc.iPhiOrY:sc.seedEta"
-        self.cuts_base = "(mc.energy>0 && ssFrac.sigmaIEtaIEta>0 && ssFrac.sigmaIPhiIPhi>0 && evt.eventnr%2==0)"
+        self.var_eb = ':'.join(["sc.rawEnergy","sc.etaWidth","sc.phiWidth","sc.seedClusEnergy/sc.rawEnergy","ssFull.e5x5/sc.rawEnergy","ele.hademTow",
+                                "rho","sc.dEtaSeedSC","sc.dPhiSeedSC","ssFull.e3x3/sc.rawEnergy","ssFull.sigmaIEtaIEta","ssFull.sigmaIEtaIPhi","ssFull.sigmaIPhiIPhi",
+                                "ssFull.eMax/ssFull.e5x5","ssFull.e2nd/ssFull.e5x5","ssFull.eTop/ssFull.e5x5","ssFull.eBottom/ssFull.e5x5","ssFull.eLeft*ssFull.e5x5","ssFull.eRight*ssFull.e5x5",
+                                "ssFull.e2x5Max/ssFull.e5x5","ssFull.e2x5Left/ssFull.e5x5","ssFull.e2x5Right/ssFull.e5x5","ssFull.e2x5Top/ssFull.e5x5","ssFull.e2x5Bottom/ssFull.e5x5",
+                                "sc.numberOfClusters","sc.iEtaOrX","sc.iPhiOrY","sc.iEtaMod5","sc.iPhiMod2","sc.iEtaMod20","sc.iPhiMod20"])
+
+        self.var_ee = ':'.join(["sc.rawEnergy","sc.etaWidth","sc.phiWidth","sc.seedClusEnergy/sc.rawEnergy","ssFull.e5x5/sc.rawEnergy","ele.hademTow",
+                                "rho","sc.dEtaSeedSC","sc.dPhiSeedSC","ssFull.e3x3/sc.rawEnergy","ssFull.sigmaIEtaIEta","ssFull.sigmaIEtaIPhi","ssFull.sigmaIPhiIPhi",
+                                "ssFull.eMax/ssFull.e5x5","ssFull.e2nd/ssFull.e5x5","ssFull.eTop/ssFull.e5x5","ssFull.eBottom/ssFull.e5x5","ssFull.eLeft*ssFull.e5x5","ssFull.eRight*ssFull.e5x5",
+                                "ssFull.e2x5Max/ssFull.e5x5","ssFull.e2x5Left/ssFull.e5x5","ssFull.e2x5Right/ssFull.e5x5","ssFull.e2x5Top/ssFull.e5x5","ssFull.e2x5Bottom/ssFull.e5x5",
+                                "sc.numberOfClusters","sc.iEtaOrX","sc.iPhiOrY","sc.rawESEnergy/sc.rawEnergy"])
+
+        self.cuts_base = "(mc.energy>0 && ssFull.sigmaIEtaIEta>0 && ssFull.sigmaIPhiIPhi>0 && ele.et>0 && eventnr%2==0)"
         self.ntrees = 1500
         self.do_eb = True
 
@@ -53,8 +63,8 @@ Regression.1.DoCombine: False
 Regression.1.DoEB: {args.do_eb}
 Regression.1.VariablesEB: {args.var_eb}
 Regression.1.VariablesEE: {args.var_ee}
-Regression.1.Target: mc.energy / ( sc.rawEnergy  )
-Regression.1.TargetError: 1.253*abs( BDTresponse - mc.energy / ( sc.rawEnergy ) )
+Regression.1.TargetError: 1.253*abs( BDTresponse - (mc.energy * (ele.trkPModeErr*ele.trkPModeErr + (sc.rawEnergy+sc.rawESEnergy)*(sc.rawEnergy+sc.rawESEnergy)*regSigma*regSigma) / ( (sc.rawEnergy+sc.rawESEnergy)*regMean*ele.trkPModeErr*ele.trkPModeErr + ele.trkPMode*(sc.rawEnergy+sc.rawESEnergy)*(sc.rawEnergy+sc.rawESEnergy)*regSigma*regSigma ) ) )
+Regression.1.Target: (mc.energy * (ele.trkPModeErr*ele.trkPModeErr + (sc.rawEnergy+sc.rawESEnergy)*(sc.rawEnergy+sc.rawESEnergy)*regSigma*regSigma) / ( (sc.rawEnergy+sc.rawESEnergy)*regMean*ele.trkPModeErr*ele.trkPModeErr + ele.trkPMode*(sc.rawEnergy+sc.rawESEnergy)*(sc.rawEnergy+sc.rawESEnergy)*regSigma*regSigma ))
 Regression.1.HistoConfig: jobs/dummy_Histo.config
 Regression.1.CutBase: {args.cuts_base} 
 Regression.1.CutEB: sc.isEB
@@ -85,7 +95,7 @@ def run_eb_and_ee(regArgs):
     subprocess.Popen(["bin/slc6_amd64_gcc700/RegressionTrainerExe",regArgs.cfg_name()]).communicate()
     forest_ee_file = regArgs.output_name()
 
-    subprocess.Popen(["bin/slc6_amd64_gcc700/RegressionApplierExe",regArgs.input_testing,regArgs.applied_name(),"--gbrForestFileEE",forest_ee_file,"--gbrForestFileEB",forest_eb_file,"--nrThreads","4"]).communicate()
+    subprocess.Popen(["bin/slc6_amd64_gcc700/RegressionApplierExe",regArgs.input_testing,regArgs.applied_name(),"--gbrForestFileEE",forest_ee_file,"--gbrForestFileEB",forest_eb_file,"--nrThreads","4","--treeName","egRegTree"]).communicate()
     
     print "made ",regArgs.applied_name()
     
@@ -94,15 +104,16 @@ def main():
     #modify the parameters as you wish and then re-run
 
     regArgs = RegArgs()
-    regArgs.input_training = "/mercury/data1/harper/mcFiles/pfRecHitValid/DoubleElePt1To100_EGReg/doubleElePt1To100_EGReg_ACMixedSigma.root"
-    regArgs.input_testing = "/mercury/data1/harper/mcFiles/pfRecHitValid/DoubleElePt1To100_EGReg/doubleElePt1To100_EGReg_ACMixedSigma.root"
+    regArgs.input_training = "test.root"
+    regArgs.input_testing = "test.root"
     regArgs.cfg_dir = "configs"
     regArgs.out_dir = "results"
-    regArgs.cuts_name = "stdCuts" 
-    regArgs.base_name = "scReg_mustFixed_ACMixedSigmaRealIC"
-    regArgs.cuts_base = "(mc.energy>0 && ssFrac.sigmaIEtaIEta>0 && ssFrac.sigmaIPhiIPhi>0 && eventnr%2==0)"
     regArgs.ntrees = 1500
-  #  regArgs.vars_name = "stdVarsNoWidth"
+    regArgs.vars_name = "trkComb"
+    regArgs.var_eb ="(sc.rawEnergy+sc.rawESEnergy)*regMean:regMean/regSigma:ele.trkPModeErr/ele.trkPMode:(sc.rawEnergy+sc.rawESEnergy)*regMean/ele.trkPMode:ele.fbrem:clus1.clusterRawEnergy/sc.rawEnergy:ele.trkEtaMode:trkPhiMode"
+    regArgs.var_ee ="(sc.rawEnergy+sc.rawESEnergy)*regMean:regMean/regSigma:ele.trkPModeErr/ele.trkPMode:(sc.rawEnergy+sc.rawESEnergy)*regMean/ele.trkPMode:ele.fbrem:clus1.clusterRawEnergy/sc.rawEnergy:ele.trkEtaMode:trkPhiMode"
+
+    
  #   regArgs.var_eb = "nrVert:sc.rawEnergy:sc.e3x3/sc.rawEnergy:sc.seedClusEnergy/sc.rawEnergy:sc.eMax/sc.rawEnergy:sc.e2nd/sc.rawEnergy:sc.eLeftRightDiffSumRatio:sc.eTopBottomDiffSumRatio:sc.sigmaIEtaIEta:sc.sigmaIEtaIPhi:sc.sigmaIPhiIPhi:sc.numberOfClusters:sc.clusterMaxDR:sc.clusterMaxDRDPhi:sc.clusterMaxDRDEta:sc.clusterMaxDRRawEnergy/sc.rawEnergy:clus1.clusterRawEnergy/sc.rawEnergy:clus2.clusterRawEnergy/sc.rawEnergy:clus3.clusterRawEnergy/sc.rawEnergy:clus1.clusterDPhiToSeed:clus2.clusterDPhiToSeed:clus3.clusterDPhiToSeed:clus1.clusterDEtaToSeed:clus2.clusterDEtaToSeed:clus3.clusterDEtaToSeed:sc.iEtaOrX:sc.iPhiOrY"
 #    regArgs.var_ee = "nrVert:sc.rawEnergy:sc.e3x3/sc.rawEnergy:sc.seedClusEnergy/sc.rawEnergy:sc.eMax/sc.rawEnergy:sc.e2nd/sc.rawEnergy:sc.eLeftRightDiffSumRatio:sc.eTopBottomDiffSumRatio:sc.sigmaIEtaIEta:sc.sigmaIEtaIPhi:sc.sigmaIPhiIPhi:sc.numberOfClusters:sc.clusterMaxDR:sc.clusterMaxDRDPhi:sc.clusterMaxDRDEta:sc.clusterMaxDRRawEnergy/sc.rawEnergy:clus1.clusterRawEnergy/sc.rawEnergy:clus2.clusterRawEnergy/sc.rawEnergy:clus3.clusterRawEnergy/sc.rawEnergy:clus1.clusterDPhiToSeed:clus2.clusterDPhiToSeed:clus3.clusterDPhiToSeed:clus1.clusterDEtaToSeed:clus2.clusterDEtaToSeed:clus3.clusterDEtaToSeed:sc.iEtaOrX:sc.iPhiOrY:seedEta"
    # regArgs.vars_name = "stdVarsNoWidthNoSigma"

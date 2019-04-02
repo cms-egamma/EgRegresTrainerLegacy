@@ -258,6 +258,7 @@ public:
     auto val = std::getenv(var.c_str()); return val ? std::string(val) : std::string();
   }
   //static double calChi2(const TH1* hist1,const TH1* hist2,double minRange,double maxRange,double minBinContent);
+  static bool isNumber(const std::string& str);
 
 
  private:

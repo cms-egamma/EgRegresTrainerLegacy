@@ -208,6 +208,9 @@ public:
   template<typename T>
   static T* get(const std::string& objName,const std::string& filename);
  
+
+  static bool validExpression(const std::string& expression,TTree* tree,bool verbose=true);
+
   ClassDef(HistFuncs,1)
 }; 
 template<typename T>

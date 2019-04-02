@@ -4,4 +4,6 @@
 /tmp/
 /bin/
 /dict/
-
+*.root
+*_C*
+*.pcm

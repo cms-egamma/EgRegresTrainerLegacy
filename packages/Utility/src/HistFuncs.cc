@@ -14,6 +14,7 @@
 #include "TEventList.h"
 
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string.hpp>
 
 int HistFuncs::nrBinsXForEffHist_ = 20;
 float HistFuncs::xMinForEffHist_ = 25;
@@ -1582,7 +1583,15 @@ TCanvas* HistFuncs::makeRatioCanvas(const std::string& name)
 void HistFuncs::dumpEvtList(TTree* tree,const std::string& cuts,const std::string& outputFile)
 {
   tree->SetEstimate(tree->GetEntries()+1);
-  tree->Draw("runnr:lumiSec:eventnr",cuts.c_str(),"goff");
+
+  std::string cuts1 = boost::algorithm::replace_all_copy(cuts,"{1}","1");
+  cuts1 = boost::algorithm::replace_all_copy(cuts1,"{2}","2");
+  std::string cuts2 = boost::algorithm::replace_all_copy(cuts,"{1}","2");
+  cuts2 = boost::algorithm::replace_all_copy(cuts2,"{2}","1");
+
+  const std::string finalCuts = "("+cuts1+") || ("+cuts2+")";
+
+  tree->Draw("runnr:lumiSec:eventnr",finalCuts.c_str(),"goff");
   double* runnrArray = tree->GetV1();
   double* lumiSecArray = tree->GetV2();
   double* eventNrArray = tree->GetV3();
@@ -1597,7 +1606,7 @@ void HistFuncs::dumpEvtList(TTree* tree,const std::string& cuts,const std::strin
 
   std::ofstream file(outputFile);
   file <<"# run lum event"<<std::endl;
-  file <<"# cuts: "<<cuts<<std::endl;
+  file <<"# cuts: "<<finalCuts<<std::endl;
   for(const auto& eventStr : eventSet){
     file << eventStr;
     //    file <<runnrArray[eventNr]<<" "<<lumiSecArray[eventNr]<<" "<<static_cast<unsigned int>(eventNrArray[eventNr])<<std::endl;
@@ -1714,6 +1723,9 @@ std::string HistFuncs::getNiceName(const std::string& var)
   else if(varClean=="nrClus") return "# sub clusters";
   else if(varClean=="nrTruePUInt") return "# true PU interactions";
   else if(varClean=="nrVert") return "# vertices";
+  else if(varClean=="rho") return "#rho";
+  else if(varClean=="r9") return "R9";
+  else if(varClean=="bremFrac") return "(p_{in} - p_{out}) / p_{in}";
 
   else return var;
 
@@ -1748,6 +1760,7 @@ std::string HistFuncs::getUnits(const std::string& var)
   else if(varClean=="isolPhoton") return "GeV";
   else if(varClean=="isolNeutral") return "GeV";
   else if(varClean=="dxy") return "cm";
+  else if(varClean=="rho") return "GeV";
  
   else return "";
 
@@ -1777,4 +1790,40 @@ TLegend* HistFuncs::makeLegend(const std::vector<std::pair<TGraph*,std::string>>
   }
   leg->SetBorderSize(0);
   return leg;
+}
+
+
+bool HistFuncs::validExpression(const std::string& expression,TTree* tree,bool verbose)
+{
+  bool valid =true;
+  std::vector<std::string> expressSplit;
+  boost::split(expressSplit,expression,boost::is_any_of("?*/-+=&|!(),;><~% "));
+  for(const auto& var : expressSplit){
+    if(var.empty() || AnaFuncs::isNumber(var)) continue;
+    std::vector<std::string> varSplit;
+    boost::split(varSplit,var,boost::is_any_of("."));
+    if(!varSplit.empty()){
+      TBranch*  branch = tree->GetBranch(varSplit[0].c_str());
+      for(size_t branchNr=1;branchNr+1<varSplit.size();branchNr++){
+	if(branch) branch = branch->FindBranch(varSplit[branchNr].c_str());
+      }
+      if(varSplit.size()>1){
+	TLeaf* leaf = branch ? branch->GetLeaf(varSplit.back().c_str()) : nullptr;
+	if(!leaf){
+	  if(verbose){
+	    std::cout <<"var: \""<<var<<"\" in \""<<expression<<"\" NOT found"<<std::endl;
+	    valid = false;
+	  }else return false; //as not printing out each fail might as well return now
+	}
+      }else if(varSplit.size()==1){
+	if(!branch){
+	  if(verbose){
+	    std::cout <<"var: \""<<var<<"\" in \""<<expression<<"\" NOT found"<<std::endl;
+	    valid = false;
+	  }else return false; //as not printing out each fail might as well return now
+	}
+      }
+    }
+  }
+  return valid;
 }

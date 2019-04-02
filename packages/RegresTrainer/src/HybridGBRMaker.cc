@@ -22,6 +22,7 @@
 #include "RegresTrainer/GBRTrainer.h"
 #include "RegresTrainer/GBRForest.h"
 #include "RegresTrainer/GBRApply.h"
+#include "Utility/HistFuncs.hh"
 
 #include <TFile.h>
 #include <TChain.h>
@@ -242,17 +243,23 @@ void HybridGBRMaker::run(const string& cutBase, const string& cutComb, const str
 {
     cout << "INFO: Prepare and run training for " << m_name << "\n";
 
+    HistFuncs::validExpression(m_target,m_tree,true);
+    HistFuncs::validExpression(cutBase,m_tree,true);
+
     if(m_doEB){
         cout << "      Running only EB\n";
+	HistFuncs::validExpression(cutEB,m_tree,true);
+	for(const auto& var : m_variablesEB) HistFuncs::validExpression(var,m_tree,true);
         runEB(cutBase, cutEB, options);
         }
     if(!m_doEB){
         cout << "      Running only EE\n";
+	HistFuncs::validExpression(cutEE,m_tree,true);
+	for(const auto& var : m_variablesEE) HistFuncs::validExpression(var,m_tree,true);
         runEE(cutBase, cutEE, options);
         }
     if(m_doCombine) runComb(cutComb, options);
 }
-
 
 /*****************************************************************/
 void HybridGBRMaker::runEB(const string& cutBase, const string& cutEB, const string& options)
@@ -264,7 +271,7 @@ void HybridGBRMaker::runEB(const string& cutBase, const string& cutEB, const str
     for (unsigned int ivar=0; ivar<m_variablesEB.size(); ++ivar)
     {
         RooRealVar* var = new RooRealVar(TString::Format("var_%i",ivar), m_variablesEB.at(ivar).c_str(), 0.);
-        varsEB.addOwned(*var);
+	varsEB.addOwned(*var);
     }
 
     //make list of input variable RooRealVars
@@ -468,6 +475,7 @@ void HybridGBRMaker::runEB(const string& cutBase, const string& cutEB, const str
     // Write input variable names
     TFile* fileOut = TFile::Open(m_fileOutName.c_str(), "UPDATE");
     fileOut->WriteObject(&m_variablesEB, "varlistEB");
+    fileOut->WriteObject(&m_target,"targetEB");
     //if(m_doCombine)
     //m_fileOut->WriteObject(&m_variablesComb, "varlistComb");
     m_forestEBmean = new GBRForestD(*sigmeantEB->Forest());
@@ -718,6 +726,7 @@ void HybridGBRMaker::runEE(const string& cutBase, const string& cutEE, const str
     m_forestEEwidth = new GBRForestD(*sigwidthtEE->Forest());
     fileOut->WriteObject(m_forestEEmean,"EECorrection");
     fileOut->WriteObject(m_forestEEwidth,"EEUncertainty");
+    fileOut->WriteObject(&m_target,"targetEE");
     fileOut->Close();
 
     weregEE.writeToFile(m_fileOutName.c_str(), false);    
@@ -840,6 +849,3 @@ void HybridGBRMaker::runComb(const string& cutComb, const string& options)
     fileOut->Close();
 
 }
-
-
-
