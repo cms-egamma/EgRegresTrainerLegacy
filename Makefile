@@ -108,8 +108,13 @@ ROOTGLIBS    := $(shell root-config --glibs)
 CMSSWFLAGS    = -I$(CMSSW_BASE)/src -I$(CMSSW_RELEASE_BASE)/src
 CMSSWLIBS     = -L${CMSSW_BASE}/lib/${SCRAM_ARCH} -L${CMSSW_RELEASE_BASE}/lib/${SCRAM_ARCH} -lCondFormatsEgammaObjects
 
-#CXXFLAGS     += $(ROOTCFLAGS) -I$(INCLUDE_DIR) $(CMSSWFLAGS)  -fno-exceptions -I$(CMSSW_DATA_PATH)/../external/boost/1.47.0-cms/
-CXXFLAGS     += $(ROOTCFLAGS) -I$(INCLUDE_DIR) $(CMSSWFLAGS)  -fexceptions  -I$(CMSSW_DATA_PATH)/../external/boost/1.63.0-omkpbe4/include -I/cvmfs/cms.cern.ch/slc6_amd64_gcc700/cms/vdt/0.4.0/include/
+#we dont know exactly where the boost directory is for CMSSW, we just pick the 
+#the first one in the directory, dont think this will matter
+BOOST_DIR     = $(shell ls $$CMSSW_DATA_PATH/../external/boost/* -d  | head -n 1)
+
+CXXFLAGS     += $(ROOTCFLAGS) -I$(INCLUDE_DIR) $(CMSSWFLAGS)  -fexceptions  -I$(BOOST_DIR)/include -I/cvmfs/cms.cern.ch/slc6_amd64_gcc700/cms/vdt/0.4.0/include/
+
+
 
 LIBS          = $(ROOTLIBS) $(SYSLIBS) $(USERLIBS) $(CMSSWLIBS)
 GLIBS         = $(ROOTGLIBS) $(SYSLIBS)
