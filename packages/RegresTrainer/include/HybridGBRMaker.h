@@ -48,7 +48,10 @@ class HybridGBRMaker
                   const std::string& treeName,
                   const std::string& outputDirectory,
                   bool doCombine,
-                  bool doEB
+                  bool doEB,
+		  float meanMin,
+		  float meanMax, 
+                  bool fixedMean
                   );
         void addVariableEB(const std::string& name);
         void addVariableEE(const std::string& name);
@@ -86,6 +89,10 @@ class HybridGBRMaker
         std::vector<std::string> m_variablesEE;
         std::vector<std::string> m_variablesComb;
         int m_ntrees;
+
+        float m_meanMin;
+        float m_meanMax;
+        bool m_fixedMean;
 
 };
 

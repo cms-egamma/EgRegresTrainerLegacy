@@ -67,7 +67,10 @@ HybridGBRMaker::HybridGBRMaker():
     m_forestEEmean(NULL),
     m_forestEBwidth(NULL),
     m_forestEEwidth(NULL),
-    m_ntrees(10000)
+    m_ntrees(10000),
+    m_meanMin(0.2),
+    m_meanMax(2.0),
+    m_fixedMean(false)
 /*****************************************************************/
 {
 }
@@ -130,14 +133,23 @@ bool HybridGBRMaker::init(const string& name,
                            const string& treeName,
                            const string& outputDirectory,
                            bool doCombine,
-                           bool doEB
+ 			   bool doEB,
+			   float meanMin,
+ 			   float meanMax,
+			   bool fixedMean
                            )
 /*****************************************************************/
 {
-    cout << "INFO: init semi-parametric GBR regression " << name << "\n";
     m_name = name;
     m_doCombine = doCombine;
     m_doEB      = doEB;
+    m_meanMin   = meanMin;
+    m_meanMax   = meanMax;
+    m_fixedMean = fixedMean;
+
+    cout << "INFO: init semi-parametric GBR regression " <<m_name << "\n";
+    cout << "INFO: mean range " << m_meanMin<<" - "<<m_meanMax << "\n";
+
 
     // create GBR trainer
     m_trainerComb = new GBRTrainer();
@@ -326,7 +338,7 @@ void HybridGBRMaker::runEB(const string& cutBase, const string& cutEB, const str
 
     RooRealVar sigmeantvarEB("sigmeantvarEB","",1.);
     sigmeantvarEB.setConstant(false); 
-
+    
     RooRealVar signvarEB("signvarEB","",3.);
     signvarEB.setConstant(false);       
 
@@ -356,7 +368,7 @@ void HybridGBRMaker::runEB(const string& cutBase, const string& cutEB, const str
     //define list of mapped functions to regress
     RooArgList tgtsEB;
     tgtsEB.add(*sigwidthtEB);
-    tgtsEB.add(*sigmeantEB);
+    if(!m_fixedMean) tgtsEB.add(*sigmeantEB);
     tgtsEB.add(*signtEB);
     tgtsEB.add(*sign2tEB);  
 
@@ -365,7 +377,7 @@ void HybridGBRMaker::runEB(const string& cutBase, const string& cutEB, const str
     
     // THOMAS: 0.2 to 2.0 is probably to restrictive - use -1.0 to 3.0 instead
     // RooRealConstraint sigmeanlimEB("sigmeanlimEB","",*sigmeantEB,0.2,2.0);
-    RooRealConstraint sigmeanlimEB("sigmeanlimEB","",*sigmeantEB,0.2,2.0);
+    RooRealConstraint sigmeanlimEB("sigmeanlimEB","",*sigmeantEB,m_meanMin,m_meanMax);
 
     RooRealConstraint signlimEB("signlimEB","",*signtEB,1.01,5000.); 
     RooRealConstraint sign2limEB("sign2limEB","",*sign2tEB,1.01,5000.); 
@@ -374,7 +386,8 @@ void HybridGBRMaker::runEB(const string& cutBase, const string& cutEB, const str
     //regression inputs in this case)
     //The actual pdf below is a double crystal ball, with crossover points alpha_1 and alpha_2 set constant, but all other
     //parameters regressed
-    RooDoubleCBFast sigpdfEB("sigpdfEB","",*targetvar,sigmeanlimEB,sigwidthlimEB,RooConst(2.),signlimEB,RooConst(1.),sign2limEB);
+    RooDoubleCBFast sigpdfEB = m_fixedMean ? RooDoubleCBFast("sigpdfEB","",*targetvar,RooConst(1.),sigwidthlimEB,RooConst(2.),signlimEB,RooConst(1.),sign2limEB) : 
+      RooDoubleCBFast("sigpdfEB","",*targetvar,sigmeanlimEB,sigwidthlimEB,RooConst(2.),signlimEB,RooConst(1.),sign2limEB);
 
     //dummy variable
     RooConstVar etermconst("etermconst","",0.);  
@@ -611,13 +624,13 @@ void HybridGBRMaker::runEE(const string& cutBase, const string& cutEE, const str
     //define list of mapped functions to regress
     RooArgList tgtsEE;
     tgtsEE.add(*sigwidthtEE);
-    tgtsEE.add(*sigmeantEE);
+    if(!m_fixedMean) tgtsEE.add(*sigmeantEE);
     tgtsEE.add(*signtEE);
     tgtsEE.add(*sign2tEE);  
 
     //define transformations corresponding to parameter bounds for non-parametric outputs  
     RooRealConstraint sigwidthlimEE("sigwidthlimEE","",*sigwidthtEE,0.0002,0.5);
-    RooRealConstraint sigmeanlimEE("sigmeanlimEE","",*sigmeantEE,0.2,2.0); // THOMAS: Up from 0.2 to 2.0
+    RooRealConstraint sigmeanlimEE("sigmeanlimEE","",*sigmeantEE,m_meanMin,m_meanMax); // THOMAS: Up from 0.2 to 2.0
     RooRealConstraint signlimEE("signlimEE","",*signtEE,1.01,5000.); 
     RooRealConstraint sign2limEE("sign2limEE","",*sign2tEE,1.01,5000.); 
 
@@ -625,7 +638,9 @@ void HybridGBRMaker::runEE(const string& cutBase, const string& cutEE, const str
     //regression inputs in this case)
     //The actual pdf below is a double crystal ball, with crossover points alpha_1 and alpha_2 set constant, but all other
     //parameters regressed
-    RooDoubleCBFast sigpdfEE("sigpdfEE","",*targetvar,sigmeanlimEE,sigwidthlimEE,RooConst(2.),signlimEE,RooConst(1.),sign2limEE);
+    RooDoubleCBFast sigpdfEE = m_fixedMean ?
+      RooDoubleCBFast("sigpdfEE","",*targetvar,RooConst(1.),sigwidthlimEE,RooConst(2.),signlimEE,RooConst(1.),sign2limEE) :
+      RooDoubleCBFast("sigpdfEE","",*targetvar,sigmeanlimEE,sigwidthlimEE,RooConst(2.),signlimEE,RooConst(1.),sign2limEE);
 
     //dummy variable
     RooConstVar etermconst("etermconst","",0.);  

@@ -90,7 +90,9 @@ bool ParReader::read(const string& parFileName)
        stringstream keyDoCombine;
 
        stringstream keyDoEB;
-
+       stringstream meanMin;
+       stringstream meanMax;
+       stringstream fixMean;
 
        keyInputFiles           <<  baseName  <<  "."  <<  i  <<  ".InputFiles";
        keyTree                 <<  baseName  <<  "."  <<  i  <<  ".Tree";
@@ -113,6 +115,9 @@ bool ParReader::read(const string& parFileName)
        keyDoCombine            <<  baseName  <<  "."  <<  i  <<  ".DoCombine";
 
        keyDoEB                 <<  baseName  <<  "."  <<  i  <<  ".DoEB";
+       meanMin                 <<  baseName  <<  "."  <<  i  <<  ".MeanMin";
+       meanMax                 <<  baseName  <<  "."  <<  i  <<  ".MeanMax";
+       fixMean                 <<  baseName  <<  "."  <<  i  <<  ".FixMean";
 
 
        RegressionParameters par;
@@ -137,7 +142,11 @@ bool ParReader::read(const string& parFileName)
        par.doCombine           =        params.GetValue(keyDoCombine.str().c_str(),          false);
 
        par.doEB                =        params.GetValue(keyDoEB.str().c_str(),               true);
-
+       
+       par.meanMin             =        params.GetValue(meanMin.str().c_str(),               0.2);
+       par.meanMax             =        params.GetValue(meanMax.str().c_str(),               2.0);
+       par.fixMean             =        params.GetValue(fixMean.str().c_str(),               false);
+       
        m_regParams.push_back(par);
 
     }
