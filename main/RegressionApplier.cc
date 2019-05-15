@@ -159,6 +159,7 @@ int main(int argc, char** argv)
       fullSigmaBranch->Fill();
       fullInvTarBranch->Fill();
     }
+    outTree->Write(0,TObject::kOverwrite);
     outFile->Write();
   }
 
