@@ -47,7 +47,9 @@ struct RegressionParameters
     bool        doCombine;
 
     bool        doEB;
-
+    float       meanMin;
+    float       meanMax;
+    bool        fixMean;
 };
 
 

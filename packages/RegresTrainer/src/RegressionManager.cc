@@ -169,7 +169,10 @@ bool RegressionManager::makeRegression()
                     it->treeName,
                     m_reader.outputDirectory(),
                     it->doCombine,
-                    it->doEB
+		    it->doEB,
+		    it->meanMin,
+		    it->meanMax,
+		    it->fixMean
                     );
             if(!status)
                 break;
