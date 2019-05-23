@@ -2,148 +2,99 @@
 
 import subprocess
 import os
-
-class RegArgs:
-    def set_defaults(self):
-        self.base_name = "reg_eleBParking"
-        self.cuts_name = "stdCuts"
-        self.vars_name = "stdVar"  
-        self.cfg_dir = "configs"
-        self.out_dir = "results"
-        self.tree_name = "egRegTree"
-        self.write_full_tree = "0"
-        self.min_events = 300
-        self.shrinkage = 0.15
-        self.min_significance = 5.0
-        self.event_weight = 1.
-        self.input_testing = "test.root"
-        self.input_training = "train.root"
-        self.target = "mc.energy/(sc.rawEnergy + sc.rawESEnergy)"
-        self.var_eb = ':'.join(["sc.rawEnergy","sc.etaWidth","sc.phiWidth","sc.seedClusEnergy/sc.rawEnergy","ssFull.e5x5/sc.rawEnergy","ele.hademTow",
-                                "rho","sc.dEtaSeedSC","sc.dPhiSeedSC","ssFull.e3x3/sc.rawEnergy","ssFull.sigmaIEtaIEta","ssFull.sigmaIEtaIPhi","ssFull.sigmaIPhiIPhi",#12
-                                "ssFull.eMax/ssFull.e5x5","ssFull.e2nd/ssFull.e5x5","ssFull.eTop/ssFull.e5x5","ssFull.eBottom/ssFull.e5x5","ssFull.eLeft/ssFull.e5x5","ssFull.eRight/ssFull.e5x5",
-                                "ssFull.e2x5Max/ssFull.e5x5","ssFull.e2x5Left/ssFull.e5x5","ssFull.e2x5Right/ssFull.e5x5","ssFull.e2x5Top/ssFull.e5x5","ssFull.e2x5Bottom/ssFull.e5x5",
-                                "ele.nrSatCrys","sc.numberOfClusters","sc.iEtaOrX","sc.iPhiOrY","sc.iEtaMod5","sc.iPhiMod2","sc.iEtaMod20","sc.iPhiMod20"])
-
-        self.var_ee = ':'.join(["sc.rawEnergy","sc.etaWidth","sc.phiWidth","sc.seedClusEnergy/sc.rawEnergy","ssFull.e5x5/sc.rawEnergy","ele.hademTow", #5
-                                "rho","sc.dEtaSeedSC","sc.dPhiSeedSC","ssFull.e3x3/sc.rawEnergy","ssFull.sigmaIEtaIEta","ssFull.sigmaIEtaIPhi","ssFull.sigmaIPhiIPhi", #12
-                                "ssFull.eMax/ssFull.e5x5","ssFull.e2nd/ssFull.e5x5","ssFull.eTop/ssFull.e5x5","ssFull.eBottom/ssFull.e5x5","ssFull.eLeft/ssFull.e5x5","ssFull.eRight/ssFull.e5x5",
-                                "ssFull.e2x5Max/ssFull.e5x5","ssFull.e2x5Left/ssFull.e5x5","ssFull.e2x5Right/ssFull.e5x5","ssFull.e2x5Top/ssFull.e5x5","ssFull.e2x5Bottom/ssFull.e5x5",
-                                "ele.nrSatCrys","sc.numberOfClusters","sc.iEtaOrX","sc.iPhiOrY","sc.rawESEnergy/sc.rawEnergy"])
-
-        self.cuts_base = "(mc.energy>0 && ssFull.sigmaIEtaIEta>0 && ssFull.sigmaIPhiIPhi>0 && ele.et>0 && evt.eventnr%2==0)"
-        self.ntrees = 1500
-        self.do_eb = True
-
-    def __init__(self):
-        self.set_defaults()
-
-    def name(self):
-        if self.do_eb: region = "EB"
-        else: region = "EE"
-        return "{args.base_name}_{args.vars_name}_{args.cuts_name}_{region}_ntrees{args.ntrees}".format(args=self,region=region)
-
-    def applied_name(self):
-        return "{args.out_dir}/{args.base_name}_{args.vars_name}_{args.cuts_name}_ntrees{args.ntrees}_applied.root".format(args=self)
+import regtools
+from regtools import RegArgs
     
-    def cfg_name(self):
-        return "{}/{}.config".format(self.cfg_dir,self.name())
-
-    def output_name(self):
-        return "{}/{}_results.root".format(self.out_dir,self.name())
-        
-    
-def make_cfg(args):
-    base_cfg = """
-Trainer: GBRLikelihoodTrain
-NumberOfRegressions: 1
-TMVAFactoryOptions: !V:!Silent:!Color:!DrawProgressBar
-OutputDirectory: {args.out_dir}
-Regression.1.Name: {name}
-Regression.1.InputFiles: {args.input_training}
-Regression.1.Tree: {args.tree_name}
-Regression.1.trainingOptions: SplitMode=random:!V
-Regression.1.Options: MinEvents={args.min_events}:Shrinkage={args.shrinkage}:NTrees={args.ntrees}:MinSignificance={args.min_significance}:EventWeight={args.event_weight}
-Regression.1.DoCombine: False
-Regression.1.DoEB: {args.do_eb}
-Regression.1.VariablesEB: {args.var_eb}
-Regression.1.VariablesEE: {args.var_ee}
-Regression.1.Target: {args.target}
-Regression.1.CutBase: {args.cuts_base} 
-Regression.1.CutEB: sc.isEB
-Regression.1.CutEE: !sc.isEB
-
-""".format(args=args,name=args.name())
-    if not os.path.isdir(args.cfg_dir):
-        os.mkdir(args.cfg_dir)
-    with open(args.cfg_name(),"w") as f:
-        f.write(base_cfg)
-    
-
-def run_eb_and_ee(regArgs):  
-
-    if not os.path.isdir(regArgs.out_dir):
-        os.mkdir(regArgs.out_dir)
-
-    regArgs.do_eb = True
-    make_cfg(args=regArgs)
-    print "starting: {}".format(regArgs.name())
-    subprocess.Popen(["bin/slc6_amd64_gcc700/RegressionTrainerExe",regArgs.cfg_name()]).communicate()
-    forest_eb_file = regArgs.output_name()
-    
-    regArgs.do_eb = False
-    make_cfg(args=regArgs)
-    print "starting: {}".format(regArgs.name())
-    subprocess.Popen(["bin/slc6_amd64_gcc700/RegressionTrainerExe",regArgs.cfg_name()]).communicate()
-    forest_ee_file = regArgs.output_name()
-
-    subprocess.Popen(["bin/slc6_amd64_gcc700/RegressionApplierExe",regArgs.input_testing,regArgs.applied_name(),"--gbrForestFileEE",forest_ee_file,"--gbrForestFileEB",forest_eb_file,"--nrThreads","4","--treeName",regArgs.tree_name,"--writeFullTree",regArgs.write_full_tree]).communicate()
-    
-    print "made ",regArgs.applied_name()
 
 def main():
 
-    #step 1, run calo only regression and stick it into a tree so it can be used for ecal-trk combination
-    #step 2, put apply the regresion to the real IC and save the result in a tree
-    #step 3, run trk-calo regression
-    run_step1 = True
-    run_step2 = True
-    run_step3 = True
+    #step 1, run calo only regression on the ideal IC to get the mean
+    #step 2, apply the mean to the real IC sample and save the result in a tree
+    #step 3, retrain the resolution for the real IC on the corrected energy
+    #step 4, run trk-calo regression using the real IC corrections as inputs 
 
-    input_ideal_ic  = "/eos/cms/store/group/phys_egamma/EgRegression/DoubleElectron_FlatPt-1To300/2018-Prompt-IDEALIC/EgRegTreeV1/DoubleElectron_FlatPt-1To300_ntuples_FlatPU0to70IdealECAL_102X_upgrade2018_realistic_forECAL_v15-v1_EgRegTreeV1_1.root"
-    input_real_ic = "/eos/cms/store/group/phys_egamma/EgRegression/DoubleElectron_FlatPt-1To300/2018-Prompt/EgRegTreeV1/DoubleElectron_FlatPt-1To300_ntuples_FlatPU0to70RAW_102X_upgrade2018_realistic_v15-v1_EgRegTreeV1_1.root"
+    #event split: ECAL Ideal IC train = eventnr%10=0
+    #             ECAL Real IC train = eventnr%10=1
+    #             ECAL ECAL-Trk IC train = eventnr%10=2
+    run_step1 = False
+    run_step2 = False
+    run_step3 = True
+    run_step4 = True
+    run_step4_extra = True
+    
+    base_ele_cuts = "(mc.energy>0 && ssFrac.sigmaIEtaIEta>0 && ssFrac.sigmaIPhiIPhi>0 && ele.et>0 && {extra_cuts})"
+
+    #input_ideal_ic  = "/eos/cms/store/group/phys_egamma/EgRegression/DoubleElectron_FlatPt-1To300/2018-Prompt-IDEALIC/EgRegTreeV1/DoubleElectron_FlatPt-1To300_ntuples_FlatPU0to70IdealECAL_102X_upgrade2018_realistic_forECAL_v15-v1_EgRegTreeV1_1.root"
+    #input_real_ic = "/eos/cms/store/group/phys_egamma/EgRegression/DoubleElectron_FlatPt-1To300/2018-Prompt/EgRegTreeV1/DoubleElectron_FlatPt-1To300_ntuples_FlatPU0to70RAW_102X_upgrade2018_realistic_v15-v1_EgRegTreeV1_1.root"
+    input_ideal_ic  = "/mercury/data1/harper/EgRegsNtups/DoubleElectron_FlatPt-1To300_2017ConditionsFlatPU0to70ECALGT_105X_mc2017_realistic_IdealEcalIC_v5-v2_AODSIM_EgRegTreeV2Refined.root"
+    input_real_ic = "/mercury/data1/harper/EgRegsNtups/DoubleElectron_FlatPt-1To300_2017ConditionsFlatPU0to70_105X_mc2017_realistic_v5-v2_AODSIM_EgRegTreeV2Refined.root"
     #step1 train the calo only regression using IDEAL intercalibration constants
+    print "starting step1"
     regArgs = RegArgs()
     regArgs.input_training = str(input_ideal_ic)
-    regArgs.input_testing = str(input_ideal_ic)
-    regArgs.target = "mc.energy/(sc.rawEnergy + sc.rawESEnergy)"
+    regArgs.input_testing = str(input_ideal_ic)  
+    regArgs.set_ecal_default()
+    regArgs.cuts_base = base_ele_cuts.format(extra_cuts = "evt.eventnr%10==0")
     regArgs.cfg_dir = "configs"
-    regArgs.out_dir = "results" 
+    regArgs.out_dir = "resultsEle" 
     regArgs.ntrees = 1500  
-    regArgs.base_name = "regEleIDEALECAL"
-    if run_step1: run_eb_and_ee(regArgs=regArgs)
+    regArgs.base_name = "regEle2017UL_IdealIC_IdealTraining"
+    if run_step1: regArgs.run_eb_and_ee()
     
     #step2 now we run over the REAL intercalibration constant data and make a rew tree with this regression included
+    print "starting step2"
     regArgs.do_eb = True
     forest_eb_file = regArgs.output_name()
     regArgs.do_eb = False
     forest_ee_file = regArgs.output_name()
 
-    regArgs.base_name = "regEleECALIDEALTraining"
-    input_for_comb = str(regArgs.applied_name()) #save the output name before we change it
-    if run_step2: subprocess.Popen(["bin/slc6_amd64_gcc700/RegressionApplierExe",input_real_ic,input_for_comb,"--gbrForestFileEE",forest_ee_file,"--gbrForestFileEB",forest_eb_file,"--nrThreads","4","--treeName",regArgs.tree_name,"--writeFullTree","1","--regOutTag","Ecal"]).communicate()
+    regArgs.base_name = "regEleEcal2017UL_RealIC_IdealTraining"
+    input_for_res_training = str(regArgs.applied_name()) #save the output name before we change it
+    if run_step2: subprocess.Popen(["bin/slc6_amd64_gcc700/RegressionApplierExe",input_real_ic,input_for_res_training,"--gbrForestFileEE",forest_ee_file,"--gbrForestFileEB",forest_eb_file,"--nrThreads","4","--treeName",regArgs.tree_name,"--writeFullTree","1","--regOutTag","Ideal"]).communicate()
     
+    #step3 we now run over re-train with the REAL sample for the sigma, changing the target to have the correction applied 
+    print "starting step3"
+    regArgs.base_name = "regEleEcal2017UL_RealIC_RealTraining"
+    regArgs.input_training = input_for_res_training
+    regArgs.input_testing = input_for_res_training
+    regArgs.target = "mc.energy/((sc.rawEnergy+sc.rawESEnergy)*regIdealMean)"
+    regArgs.fix_mean = True
+    regArgs.write_full_tree = "1"
+    regArgs.reg_out_tag = "Real"
+    regArgs.cuts_base = base_ele_cuts.format(extra_cuts = "evt.eventnr%10==1")
+    if run_step3: regArgs.run_eb_and_ee()
 
-    #step3 do the E/p combination
-    regArgs.base_name = "regEleIDEALECALTrk"
-    regArgs.var_eb =":".join(["(sc.rawEnergy+sc.rawESEnergy)*regEcalMean","regEcalSigma/regEcalMean","ele.trkPModeErr/ele.trkPMode","(sc.rawEnergy+sc.rawESEnergy)*regEcalMean/ele.trkPMode","ele.ecalDrivenSeed","ssFull.e3x3/sc.rawEnergy","ele.fbrem","ele.trkEtaMode","ele.trkPhiMode"])
-    regArgs.var_ee =":".join(["(sc.rawEnergy+sc.rawESEnergy)*regEcalMean","regEcalSigma/regEcalMean","ele.trkPModeErr/ele.trkPMode","(sc.rawEnergy+sc.rawESEnergy)*regEcalMean/ele.trkPMode","ele.ecalDrivenSeed","ssFull.e3x3/sc.rawEnergy","ele.fbrem","ele.trkEtaMode","ele.trkPhiMode"])
-    regArgs.target = "(mc.energy * (ele.trkPModeErr*ele.trkPModeErr + (sc.rawEnergy+sc.rawESEnergy)*(sc.rawEnergy+sc.rawESEnergy)*regEcalSigma*regEcalSigma) / ( (sc.rawEnergy+sc.rawESEnergy)*regEcalMean*ele.trkPModeErr*ele.trkPModeErr + ele.trkPMode*(sc.rawEnergy+sc.rawESEnergy)*(sc.rawEnergy+sc.rawESEnergy)*regEcalSigma*regEcalSigma ))"
+    
+    #step4 do the E/p low combination
+    #remember we use the Ideal Mean but Real Sigma (real mean is 1 by construction)
+    print "starting step4"
+    input_for_comb = str(regArgs.applied_name())
+
+    regArgs.base_name = "regEleEcalTrk2017UL_RealIC"
+    regArgs.var_eb =":".join(["(sc.rawEnergy+sc.rawESEnergy)*regIdealMean","regRealSigma/regIdealMean","ele.trkPModeErr/ele.trkPMode","(sc.rawEnergy+sc.rawESEnergy)*regIdealMean/ele.trkPMode","ele.ecalDrivenSeed","ssFull.e3x3/sc.rawEnergy","ele.fbrem","ele.trkEtaMode","ele.trkPhiMode"])
+    regArgs.var_ee =":".join(["(sc.rawEnergy+sc.rawESEnergy)*regIdealMean","regRealSigma/regIdealMean","ele.trkPModeErr/ele.trkPMode","(sc.rawEnergy+sc.rawESEnergy)*regIdealMean/ele.trkPMode","ele.ecalDrivenSeed","ssFull.e3x3/sc.rawEnergy","ele.fbrem","ele.trkEtaMode","ele.trkPhiMode"])
+    regArgs.target = "(mc.energy * (ele.trkPModeErr*ele.trkPModeErr + (sc.rawEnergy+sc.rawESEnergy)*(sc.rawEnergy+sc.rawESEnergy)*regRealSigma*regRealSigma) / ( (sc.rawEnergy+sc.rawESEnergy)*regIdealMean*ele.trkPModeErr*ele.trkPModeErr + ele.trkPMode*(sc.rawEnergy+sc.rawESEnergy)*(sc.rawEnergy+sc.rawESEnergy)*regRealSigma*regRealSigma ))"
     regArgs.input_training = input_for_comb
     regArgs.input_testing = input_for_comb
-    regArgs.write_full_tree = "1"
-    if run_step3: run_eb_and_ee(regArgs=regArgs)
+    regArgs.write_full_tree = "0"  
+    regArgs.fix_mean = False
+    regArgs.reg_out_tag = "EcalTrk"
+    regArgs.cuts_base = base_ele_cuts.format(extra_cuts = "evt.eventnr%10==2")
+    if run_step4: 
+        regArgs.run_eb_and_ee()
+    if run_step4_extra:
+        regArgs.base_name = "regEleEcalTrkLowPt2017UL_RealIC"
+        regArgs.cuts_base = base_ele_cuts.format(extra_cuts = "evt.eventnr%10==2 && mc.pt<50")
+        forest_eb,forest_ee = regArgs.forest_filenames()
+        regArgs.run_eb_and_ee()
+        regArgs.base_name = "regEleEcalTrkHighPt2017UL_RealIC"
+        regArgs.cuts_base = base_ele_cuts.format(extra_cuts = "evt.eventnr%10==2 && mc.pt>50 && mc.pt<200")
+        forest_eb_highpt,forest_ee_highpt = regArgs.forest_filenames()
+        regArgs.run_eb_and_ee()
+        regArgs.base_name = "regEleEcalTrkLowHighPt2017UL_RealIC"
+        subprocess.Popen(["bin/slc6_amd64_gcc700/RegressionApplierExe",regArgs.input_testing,regArgs.applied_name(),"--gbrForestFileEB",forest_eb,"--gbrForestFileEE",forest_ee,"--gbrForestFileEBHighEt",forest_eb_highpt,"--gbrForestFileEEHighEt",forest_ee_highpt,"--highEtThres","50.","--nrThreads","4","--treeName",regArgs.tree_name,"--writeFullTree","0"]).communicate()
     
+        
     
 if __name__ =='__main__':
     main()

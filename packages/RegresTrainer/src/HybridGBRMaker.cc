@@ -492,6 +492,13 @@ void HybridGBRMaker::runEB(const string& cutBase, const string& cutEB, const str
     //if(m_doCombine)
     //m_fileOut->WriteObject(&m_variablesComb, "varlistComb");
     m_forestEBmean = new GBRForestD(*sigmeantEB->Forest());
+    if(m_fixedMean){
+      //here we set the initial response so it gives 1 when called
+      const double meanScale   = 0.5*(m_meanMax-m_meanMin);
+      const double meanOffset  = m_meanMin + meanScale;
+      m_forestEBmean->SetInitialResponse(std::asin(1 -meanOffset)/meanScale);
+
+    }
     m_forestEBwidth = new GBRForestD(*sigwidthtEB->Forest());
     fileOut->WriteObject(m_forestEBmean,"EBCorrection");
     fileOut->WriteObject(m_forestEBwidth,"EBUncertainty");
@@ -738,6 +745,12 @@ void HybridGBRMaker::runEE(const string& cutBase, const string& cutEE, const str
     TFile* fileOut = TFile::Open(m_fileOutName.c_str(), "UPDATE");
     fileOut->WriteObject(&m_variablesEE, "varlistEE");
     m_forestEEmean = new GBRForestD(*sigmeantEE->Forest());
+    if(m_fixedMean){
+      //here we set the initial response so it gives 1 when called
+      const double meanScale   = 0.5*(m_meanMax-m_meanMin);
+      const double meanOffset  = m_meanMin + meanScale;
+      m_forestEEmean->SetInitialResponse(std::asin(1 -meanOffset)/meanScale);
+    }
     m_forestEEwidth = new GBRForestD(*sigwidthtEE->Forest());
     fileOut->WriteObject(m_forestEEmean,"EECorrection");
     fileOut->WriteObject(m_forestEEwidth,"EEUncertainty");

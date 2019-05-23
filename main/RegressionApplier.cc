@@ -41,6 +41,30 @@ public:
   }
 };
 
+class GBRForestCont{
+private:
+  std::pair<const GBRForestD*,const GBRForestD*> eb_;
+  std::pair<const GBRForestD*,const GBRForestD*> ee_;
+  std::pair<const GBRForestD*,const GBRForestD*> ebHighEt_;
+  std::pair<const GBRForestD*,const GBRForestD*> eeHighEt_;
+  double highEtThres_;
+
+public:
+  GBRForestCont(const std::string& ebFilename,const std::string& eeFilename,
+		const std::string& ebHighEtFilename,const std::string& eeHighEtFilename,
+		double highEtThres=std::numeric_limits<double>::max());
+  GBRForestCont(const GBRForestCont&)=delete;
+  GBRForestCont& operator=(const GBRForestCont&)=delete;
+  ~GBRForestCont();
+  
+  const std::pair<const GBRForestD*,const GBRForestD*>& operator()(double et,bool isEB)const{
+    if(et<highEtThres_) return isEB ? eb_ : ee_;
+    else return isEB ? ebHighEt_ : eeHighEt_;
+  }
+private:
+  static void loadForests(std::pair<const GBRForestD*,const GBRForestD*>& forests,const std::string& filename,const std::string& tag);
+};
+
 std::pair<double,double> getRes(const std::vector<float>& regData,const std::pair<const GBRForestD*,const GBRForestD*>& gbrForest);
 
 class RegFunc {
@@ -57,8 +81,7 @@ public:
 void fillTree(const std::vector<std::vector<float> >& regDataEB,
 	      const std::vector<std::vector<float> >& regDataEE,
 	      const std::vector<std::vector<float> >& evtData,
-	      const std::pair<const GBRForestD*,const GBRForestD*>& gbrForestEB,
-	      const std::pair<const GBRForestD*,const GBRForestD*>& gbrForestEE,
+	      const GBRForestCont& gbrForests,
 	      TreeData& outTreeData,
 	      TTree* outTree,
 	      unsigned int nrThreads);
@@ -71,15 +94,23 @@ int main(int argc, char** argv)
   char outFilename[1024];
   char gbrFilenameEB[1024];
   char gbrFilenameEE[1024];
+  char gbrFilenameEBHighEt[1024];
+  char gbrFilenameEEHighEt[1024];
+  char etBinVar[1024];
   char treeName[1024];
   char regOutTagChar[1024];
   int nrThreads;
+  double highEtThres;
   bool writeFullTree;
   CmdLineInt cmdLineInt(argv[0]);
   cmdLineInt.addNonOption(inFilename,true," ","input files");
   cmdLineInt.addNonOption(outFilename,true," ","output filename");
   cmdLineInt.addOption("gbrForestFileEB",gbrFilenameEB,"test.root","gbrForestFile for barrel");
   cmdLineInt.addOption("gbrForestFileEE",gbrFilenameEE,"test.root","gbrForestFile for endcap");
+  cmdLineInt.addOption("gbrForestFileEBHighEt",gbrFilenameEBHighEt,"","gbrForestFile for barrel high et, highEtThres must be set for this to be read");
+  cmdLineInt.addOption("gbrForestFileEEHighEt",gbrFilenameEEHighEt,"","gbrForestFile for endcap high et, highEtThres must be set for this to be read");
+  cmdLineInt.addOption("highEtThres",&highEtThres,std::numeric_limits<double>::max(),"threshold at which to apply the high Et forests");
+  cmdLineInt.addOption("etBinVar",etBinVar,"(sc.rawEnergy+sc.rawESEnergy)*sin(2*atan(exp(-1*sc.scEta)))","et variable to bin vs");
   cmdLineInt.addOption("nrThreads",&nrThreads,1,"number of threads for reading tree");
   cmdLineInt.addOption("treeName",treeName,"egRegTree"," name of the tree");
   cmdLineInt.addOption("regOutTag",regOutTagChar,"","tag of the output regression branches , eg \"reg{regOutTagChar}Mean\" if writing full tree");
@@ -95,8 +126,10 @@ int main(int argc, char** argv)
   TreeData outTreeData;
   outTreeData.createBranches(outTree);
 
-  TFile* gbrFileEB = TFile::Open(gbrFilenameEB,"READ");
-  TFile* gbrFileEE = TFile::Open(gbrFilenameEE,"READ");
+  GBRForestCont gbrForests(gbrFilenameEB,gbrFilenameEE,
+			   gbrFilenameEBHighEt,gbrFilenameEEHighEt,
+			   highEtThres);
+
   auto readVarList = [](TFile* file,const std::string& listname){
     auto vars = reinterpret_cast<std::vector<std::string>* >(file->Get(listname.c_str()));
     if(!vars){
@@ -110,21 +143,18 @@ int main(int argc, char** argv)
     }
     return varsStr;
   };
+  
+  //now we get the target variable from the files
+  //it rather assumes the high pt ones use the same variables
+  //which currently is a good assumption
+  TFile* gbrFileEB = TFile::Open(gbrFilenameEB,"READ");
+  TFile* gbrFileEE = TFile::Open(gbrFilenameEE,"READ");
+
   const std::string varsEB = readVarList(gbrFileEB,"varlistEB");
   const std::string varsEE = readVarList(gbrFileEE,"varlistEE");
   const std::string* targetEB = reinterpret_cast<std::string*>(gbrFileEB->Get("targetEB"));
   const std::string* targetEE = reinterpret_cast<std::string*>(gbrFileEE->Get("targetEE"));
  
-  GBRForestD* gbrMeanEB = reinterpret_cast<GBRForestD*>(gbrFileEB->Get("EBCorrection"));
-  GBRForestD* gbrSigmaEB = reinterpret_cast<GBRForestD*>(gbrFileEB->Get("EBUncertainty"));
-  GBRForestD* gbrMeanEE = reinterpret_cast<GBRForestD*>(gbrFileEE->Get("EECorrection"));
-  GBRForestD* gbrSigmaEE = reinterpret_cast<GBRForestD*>(gbrFileEE->Get("EEUncertainty"));
-  if(!gbrMeanEB || !gbrSigmaEB){
-    std::cout <<" error, couldnt get GBRForests "<<gbrMeanEB<<" "<<gbrSigmaEB<<" from "<<gbrFilenameEB<<" for barrel"<<std::endl;
-  }
-  if(!gbrMeanEE || !gbrSigmaEE){
-    std::cout <<" error, couldnt get GBRForests "<<gbrMeanEE<<" "<<gbrSigmaEE<<" from "<<gbrFilenameEE<<" for endcap"<<std::endl;
-  }
   if(varsEB.empty() || varsEE.empty()){
     std::cout <<"vars not found, exiting"<<std::endl;
     outFile->Write();
@@ -133,9 +163,8 @@ int main(int argc, char** argv)
 
   const auto regDataEBAll = HistFuncs::readTree(inTree,varsEB+":"+*targetEB,"");
   const auto regDataEEAll = HistFuncs::readTree(inTree,varsEE+":"+*targetEE,"");
-  const auto evtData = HistFuncs::readTree(inTree,"runnr:eventnr:lumiSec:sc.isEB","");
-  fillTree(regDataEBAll,regDataEEAll,evtData,{gbrMeanEB,gbrSigmaEB},{gbrMeanEE,gbrSigmaEE},
-	   outTreeData,outTree,nrThreads);
+  const auto evtData = HistFuncs::readTree(inTree,"runnr:eventnr:lumiSec:sc.isEB:"+std::string(etBinVar),"");
+  fillTree(regDataEBAll,regDataEEAll,evtData,gbrForests,outTreeData,outTree,nrThreads);
 
 
   outFile->Write();
@@ -169,8 +198,7 @@ int main(int argc, char** argv)
 void fillTree(const std::vector<std::vector<float> >& regDataEB,
 	      const std::vector<std::vector<float> >& regDataEE,
 	      const std::vector<std::vector<float> >& evtData,
-	      const std::pair<const GBRForestD*,const GBRForestD*>& gbrForestEB,
-	      const std::pair<const GBRForestD*,const GBRForestD*>& gbrForestEE,
+	      const GBRForestCont& gbrForests,
 	      TreeData& outTreeData,
 	      TTree* outTree,
 	      unsigned int nrThreads)
@@ -184,12 +212,12 @@ void fillTree(const std::vector<std::vector<float> >& regDataEB,
   for(unsigned int i=0;i<nrThreads;i++) threadEntryNrs.push_back(i);
   
   auto initThread = [&threads,&regDataEB,&regDataEE,
-		     &gbrForestEB,gbrForestEE,
+		     &gbrForests,
 		     &regFuncs,&evtData,&threadEntryNrs](unsigned int threadNr){
     const auto entryNr = threadEntryNrs[threadNr];
     if(entryNr<regDataEB.size()){
       auto& regData = evtData[entryNr][3] ? regDataEB[entryNr] : regDataEE[entryNr];
-      auto& gbrForest = evtData[entryNr][3] ? gbrForestEB : gbrForestEE;
+      auto& gbrForest = gbrForests(evtData[entryNr][4],evtData[entryNr][3]);
       threads[threadNr] = std::async(getRes,regData,gbrForest);
       return true;
     }else return false;
@@ -258,3 +286,43 @@ std::pair<double,double> getRes(const std::vector<float>& regData,const std::pai
   return {mean,sigma};
 }
 
+GBRForestCont::GBRForestCont(const std::string& ebFilename,
+			     const std::string& eeFilename,
+			     const std::string& ebHighEtFilename,
+			     const std::string& eeHighEtFilename,
+			     double highEtThres):
+  eb_(nullptr,nullptr), ee_(nullptr,nullptr),
+  ebHighEt_(nullptr,nullptr), eeHighEt_(nullptr,nullptr),
+  highEtThres_(highEtThres)
+{
+  loadForests(eb_,ebFilename,"EB");
+  loadForests(ee_,eeFilename,"EE");
+  if(highEtThres_!=std::numeric_limits<double>::max()){
+    loadForests(ebHighEt_,ebHighEtFilename,"EB");
+    loadForests(eeHighEt_,eeHighEtFilename,"EE");
+  }
+}
+
+void GBRForestCont::loadForests(std::pair<const GBRForestD*,const GBRForestD*>& forests,const std::string& filename,const std::string& tag)
+{ 
+
+  TFile* file = TFile::Open(filename.c_str(),"READ");
+  forests.first = reinterpret_cast<GBRForestD*>(file->Get((tag+"Correction").c_str()));
+  forests.second = reinterpret_cast<GBRForestD*>(file->Get((tag+"Uncertainty").c_str()));
+  if(!forests.first  || !forests.second){
+    std::cout <<" error, couldnt get GBRForests "<<forests.first<<" "<<forests.second<<" from "<<filename<<" for "<<tag<<std::endl;
+  }
+  delete file;
+}
+
+GBRForestCont::~GBRForestCont()
+{
+  auto del = [](std::pair<const GBRForestD*,const GBRForestD*>& obj){
+    delete obj.first;
+    delete obj.second;
+  };
+  del(eb_);
+  del(ee_);
+  del(ebHighEt_);
+  del(eeHighEt_);
+}
