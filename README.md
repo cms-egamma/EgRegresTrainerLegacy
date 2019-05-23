@@ -19,6 +19,7 @@ cd EgRegresTrainerLegacy
 gmake RegressionTrainerExe -j 8
 gmake RegressionApplierExe -j 8
 export PATH=$PATH:./bin/$SCRAM_ARCH #add the binary location to path
+export PYTHON27PATH = $PYTHON27PATH:python #adds the python sub dir to python path, this may be PYTHONPATH in some systems 
 ```
 
 ## running the regression training
