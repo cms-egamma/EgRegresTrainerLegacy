@@ -16,18 +16,16 @@ def main():
     #event split: ECAL Ideal IC train = eventnr%10=0
     #             ECAL Real IC train = eventnr%10=1
     #             ECAL ECAL-Trk IC train = eventnr%10=2
-    run_step1 = False
-    run_step2 = False
+    run_step1 = True
+    run_step2 = True
     run_step3 = True
     run_step4 = True
     run_step4_extra = True
     
     base_ele_cuts = "(mc.energy>0 && ssFrac.sigmaIEtaIEta>0 && ssFrac.sigmaIPhiIPhi>0 && ele.et>0 && {extra_cuts})"
 
-    #input_ideal_ic  = "/eos/cms/store/group/phys_egamma/EgRegression/DoubleElectron_FlatPt-1To300/2018-Prompt-IDEALIC/EgRegTreeV1/DoubleElectron_FlatPt-1To300_ntuples_FlatPU0to70IdealECAL_102X_upgrade2018_realistic_forECAL_v15-v1_EgRegTreeV1_1.root"
-    #input_real_ic = "/eos/cms/store/group/phys_egamma/EgRegression/DoubleElectron_FlatPt-1To300/2018-Prompt/EgRegTreeV1/DoubleElectron_FlatPt-1To300_ntuples_FlatPU0to70RAW_102X_upgrade2018_realistic_v15-v1_EgRegTreeV1_1.root"
-    input_ideal_ic  = "/mercury/data1/harper/EgRegsNtups/DoubleElectron_FlatPt-1To300_2017ConditionsFlatPU0to70ECALGT_105X_mc2017_realistic_IdealEcalIC_v5-v2_AODSIM_EgRegTreeV2Refined.root"
-    input_real_ic = "/mercury/data1/harper/EgRegsNtups/DoubleElectron_FlatPt-1To300_2017ConditionsFlatPU0to70_105X_mc2017_realistic_v5-v2_AODSIM_EgRegTreeV2Refined.root"
+    input_ideal_ic  = "/mercury/data1/harper/EgRegsNtups/DoubleElectron_FlatPt-1To300_2017ConditionsFlatPU0to70ECALGT_105X_mc2017_realistic_IdealEcalIC_v5-v2_AODSIM_EgRegTreeV4Refined.root"
+    input_real_ic = "/mercury/data1/harper/EgRegsNtups/DoubleElectron_FlatPt-1To300_2017ConditionsFlatPU0to70_105X_mc2017_realistic_v5-v2_AODSIM_EgRegTreeV4Refined.root"
     #step1 train the calo only regression using IDEAL intercalibration constants
     print "starting step1"
     regArgs = RegArgs()
@@ -36,7 +34,7 @@ def main():
     regArgs.set_ecal_default()
     regArgs.cuts_base = base_ele_cuts.format(extra_cuts = "evt.eventnr%10==0")
     regArgs.cfg_dir = "configs"
-    regArgs.out_dir = "resultsEle" 
+    regArgs.out_dir = "resultsEleV4" 
     regArgs.ntrees = 1500  
     regArgs.base_name = "regEle2017UL_IdealIC_IdealTraining"
     if run_step1: regArgs.run_eb_and_ee()
