@@ -20,12 +20,12 @@ def main():
     run_step2 = True
     run_step3 = True
     run_step4 = True
-    run_step4_extra = True
+    run_step4_extra = False
     
     base_ele_cuts = "(mc.energy>0 && ssFrac.sigmaIEtaIEta>0 && ssFrac.sigmaIPhiIPhi>0 && ele.et>0 && {extra_cuts})"
 
-    input_ideal_ic  = "/mercury/data1/harper/EgRegsNtups/DoubleElectron_FlatPt-1To300_2017ConditionsFlatPU0to70ECALGT_105X_mc2017_realistic_IdealEcalIC_v5-v2_AODSIM_EgRegTreeV4Refined.root"
-    input_real_ic = "/mercury/data1/harper/EgRegsNtups/DoubleElectron_FlatPt-1To300_2017ConditionsFlatPU0to70_105X_mc2017_realistic_v5-v2_AODSIM_EgRegTreeV4Refined.root"
+    input_ideal_ic  = "/mercury/data1/harper/EgRegsNtups/DoubleElectron_FlatPt-1To300_2017ConditionsFlatPU0to70ECALGT_105X_mc2017_realistic_IdealEcalIC_v5-v2_AODSIM_EgRegTreeV5Refined.root"
+    input_real_ic = "/mercury/data1/harper/EgRegsNtups/DoubleElectron_FlatPt-1To300_2017ConditionsFlatPU0to70_105X_mc2017_realistic_v5-v2_AODSIM_EgRegTreeV5Refined.root"
     #step1 train the calo only regression using IDEAL intercalibration constants
     print "starting step1"
     regArgs = RegArgs()
@@ -34,7 +34,7 @@ def main():
     regArgs.set_ecal_default()
     regArgs.cuts_base = base_ele_cuts.format(extra_cuts = "evt.eventnr%10==0")
     regArgs.cfg_dir = "configs"
-    regArgs.out_dir = "resultsEleV4" 
+    regArgs.out_dir = "resultsEleV5" 
     regArgs.ntrees = 1500  
     regArgs.base_name = "regEle2017UL_IdealIC_IdealTraining"
     if run_step1: regArgs.run_eb_and_ee()
