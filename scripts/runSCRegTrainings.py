@@ -4,52 +4,87 @@ import subprocess
 import os
 import regtools
 from regtools import RegArgs
-    
-def main():
-    run_step1 = False
+import time
+import argparse
+def main():  
+
+    parser = argparse.ArgumentParser(description='runs the SC regression trainings')
+    parser.add_argument('--era',required=True,help='year to produce for, 2016, 2017, 2018 are the options')
+    parser.add_argument('--input_dir','-i',default='/mercury/data1/harper/EgRegsNtups',help='input directory with the ntuples')
+    parser.add_argument('--output_dir','-o',default="results",help='output dir')
+    args = parser.parse_args()
+
+    #step 1, run calo only regression on the ideal IC to get the mean
+    #step 2, apply the mean to the real IC sample and save the result in a tree
+    #step 3, retrain the resolution for the real IC on the corrected energy
+    run_step1 = True
     run_step2 = True
     run_step3 = True
 
-    #modify the parameters as you wish and then re-run
-    input_ideal_ic  = "/mercury/data1/harper/EgRegsNtups/DoubleElectron_FlatPt-1To300_2017ConditionsFlatPU0to70ECALGT_105X_mc2017_realistic_IdealEcalIC_v5-v2_AODSIM_EgRegTreeV1_extraVars.root"
-    input_real_ic = "/mercury/data1/harper/EgRegsNtups/DoubleElectron_FlatPt-1To300_2017ConditionsFlatPU0to70_105X_mc2017_realistic_v5-v2_AODSIM_EgRegTreeV1_4.root"
+    #setup the selection (event number cuts come later)
+    cuts_name = "stdCuts" 
+    base_ele_cuts = "(mc.energy>0 && ssFrac.sigmaIEtaIEta>0 && ssFrac.sigmaIPhiIPhi>0 && {extra_cuts})"
+    
+    #prefixes all the regressions produced
+    if era=='2016':
+        base_reg_name = "scReg2016UL"
+        raise ValueError("era 2016 is not yet implimented".format(era))
+    elif era=='2017':
+        base_reg_name = "scReg2017UL"    
+        input_ideal_ic  = "{}/DoubleElectron_FlatPt-1To300_2017ConditionsFlatPU0to70ECALGT_105X_mc2017_realistic_IdealEcalIC_v5-v2_AODSIM_EgRegTreeV1_extraVars.root".format(args.input_dir)
+        input_real_ic = "{}/DoubleElectron_FlatPt-1To300_2017ConditionsFlatPU0to70_105X_mc2017_realistic_v5-v2_AODSIM_EgRegTreeV1_4.root".format(args.input_dir)     
+    elif era=='2018':
+        base_reg_name = "scReg2018UL"    
+        input_ideal_ic  = "{}/DoubleElectron_FlatPt-1To300_2018ConditionsFlatPU0to70ECALGT_105X_upgrade2018_realistic_IdealEcalIC_v4-v1_AODSIM_EgRegTreeV5_partStats.root".format(args.input_dir)
+        input_real_ic = "{}/DoubleElectron_FlatPt-1To300_2018ConditionsFlatPU0to70RAW_105X_upgrade2018_realistic_v4-v1_AODSIM_EgRegTreeV5_partStats.root".format(args.input_dir)    
+    else:
+        raise ValueError("era {} is invalid, options are 2016/2017/2018".format(era))
+
+    
     regArgs = RegArgs()
- #   regArgs.input_training = "/mercury/data1/harper/EgRegsNtups/DoubleElectron_FlatPt-1To300_2017ConditionsFlatPU0to70ECALGT_105X_mc2017_realistic_IdealEcalIC_v5-v2_AODSIM_EgRegTreeV1_extraVars.root"
-#    regArgs.input_testing = "/mercury/data1/harper/EgRegsNtups/DoubleElectron_FlatPt-1To300_2017ConditionsFlatPU0to70ECALGT_105X_mc2017_realistic_IdealEcalIC_v5-v2_AODSIM_EgRegTreeV1_extraVars.root"
     regArgs.input_training =  str(input_ideal_ic)
     regArgs.input_testing = str(input_ideal_ic)
-
+    regArgs.set_sc_default()
     regArgs.cfg_dir = "configs"
-    regArgs.out_dir = "results"
-    regArgs.cuts_name = "stdCuts" 
-    regArgs.base_name = "scRegUL_1050"
+    regArgs.out_dir = args.out_dir
+    regArgs.cuts_name = cuts_name
+    regArgs.base_name = "{}_IdealIC_IdealTraining".format(base_reg_name)
+    regArgs.cuts_base = base_ele_cuts.format(extra_cuts = "evt.eventnr%10==0")
     regArgs.ntrees = 1500
  
+    print """about to run the supercluster regression with: 
+    name: {name}
+    ideal ic input: {ideal_ic}
+    real ic input: {real_ic}
+    output dir: {out_dir}
+    steps to be run:
+       1  = {step1}
+       2  = {step2}
+       3  = {step3}""".format(name=base_reg_name,ideal_ic=input_ideal_ic,real_ic=input_real_ic,out_dir=args.out_dir,step1=run_step1,step2=run_step2,step3=run_step3)
+    time.sleep(20)
+
+    if not os.path.exists(args.out_dir):
+        os.makedirs(args.out_dir)
+
     if run_step1: regArgs.run_eb_and_ee()
     
     regArgs.do_eb = True
     forest_eb_file = regArgs.output_name()
     regArgs.do_eb = False
     forest_ee_file = regArgs.output_name()
-    
-    
 
-    regArgs.base_name = "scRegUL_1050_realIC_IdealTraining"
-#    regArgs.base_name = "scRegUL_1050_idealIC_IdealTraining"
+    regArgs.base_name = "{}_RealIC_IdealTraining".format(base_reg_name)
     input_for_res_training = str(regArgs.applied_name()) #save the output name before we change it
     input_for_input_for_res_training = str(input_real_ic)
-  #  input_for_input_for_res_training = str(input_ideal_ic)
     
     if run_step2: subprocess.Popen(["bin/slc6_amd64_gcc700/RegressionApplierExe",input_for_input_for_res_training,input_for_res_training,"--gbrForestFileEE",forest_ee_file,"--gbrForestFileEB",forest_eb_file,"--nrThreads","4","--treeName",regArgs.tree_name,"--writeFullTree","1","--regOutTag","Ideal"]).communicate()
 
- #   regArgs.base_name = "scRegUL_1050_idealIC_TestResTraining"
-    regArgs.base_name = "scRegUL_1050_realIC_RealTraining"
+    regArgs.base_name = "{}_RealIC_RealTraining".format(base_reg_name)
     regArgs.input_training = input_for_res_training
     regArgs.input_testing = input_for_res_training
     regArgs.target = "mc.energy/(sc.rawEnergy*regIdealMean)"
-    regArgs.mean_min = 0.2
-    regArgs.mean_max = 2.0
     regArgs.fix_mean = True
+    regArgs.cuts_base = base_ele_cuts.format(extra_cuts = "evt.eventnr%10==1")
     if run_step3: regArgs.run_eb_and_ee()
 
 if __name__ =='__main__':
