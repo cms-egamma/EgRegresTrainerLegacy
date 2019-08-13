@@ -1,16 +1,13 @@
-#include "RegresTester/ResFitter.hh"
+#include "ResAnalysis/ResFitter.hh"
 #include "RegresTrainer/CruijffPdf.h"
 #include "GBRLikelihood/RooDoubleCBFast.h"
 #include "Utility/HistFuncs.hh"
 
-
-//#include "RooAbsPdf.h"
 #include "RooAddPdf.h"
 #include "RooConstVar.h"
 #include "RooDataHist.h"
 #include "RooArgList.h"
 #include "RooCBShape.h"
-//#include "RooDataSet.h"
 #include "RooPlot.h"
 #include "RooRealVar.h"
 #include "RooFitResult.h"
@@ -20,16 +17,6 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TGraphErrors.h"
-//#include "TCanvas.h"
-//#include "TROOT.h"
-//#include "TStyle.h"
-//#include "TTree.h"
-//#include "TGraphErrors.h"
-//#include "TSystem.h"
-//#include "TColor.h"
-
-//#include "Math/PdfFuncMathCore.h"
-//#include "RooGlobalFunc.h"
 
 ResFitter::Param ResFitter::makeFit(TH1* hist,float xmin,float xmax,const std::string& fitVarName)const
 {
@@ -80,7 +67,7 @@ ResFitter::Param ResFitter::makeCBFit(TH1* hist,float xmin,float xmax,const std:
   model.paramOn(plot,RooFit::Format("NEU", RooFit::AutoPrecision(2)),RooFit::ShowConstants(true),RooFit::Layout(0.6,0.95,0.8));
 
   ResFitter::Param fitParam;
-  fitParam.fill(mean,cbSigma,plot,fitVarName);
+  fitParam.fill(mean,cbSigma,FitType::CB,plot,fitVarName);
   return fitParam;
 }
 
@@ -124,7 +111,7 @@ ResFitter::Param ResFitter::makeDCBFit(TH1* hist,float xmin,float xmax,const std
   model.paramOn(plot,RooFit::Format("NEU", RooFit::AutoPrecision(2)),RooFit::ShowConstants(true),RooFit::Layout(0.6,0.95,0.8));
 
   ResFitter::Param fitParam;
-  fitParam.fill(mean,cbSigma,plot,fitVarName);
+  fitParam.fill(mean,cbSigma,FitType::DCB,plot,fitVarName);
   return fitParam;
 }
 
@@ -176,12 +163,12 @@ ResFitter::Param ResFitter::makeCruijffFit(TH1* hist,float xmin,float xmax,const
 ResFitter::ParamsVsVar ResFitter::makeFitVsVar(TH2* hist2D,float fitMin,float fitMax,const std::string& fitVarName)const
 {
   std::vector<Param> fitParams;
-  std::vector<double> binLowEdges = {hist2D->GetXaxis()->GetBinLowEdge(0)};
+  std::vector<double> binLowEdges;
   for(int binNr=1;binNr<=hist2D->GetNbinsX();binNr++){
-    fitParams.push_back(makeFit(hist2D,binNr,fitMin,fitMax));
+    fitParams.push_back(makeFit(hist2D,binNr,fitMin,fitMax,fitVarName));
     binLowEdges.push_back(hist2D->GetXaxis()->GetBinLowEdge(binNr));
   }
-
+  binLowEdges.push_back(hist2D->GetXaxis()->GetBinLowEdge(hist2D->GetNbinsX()+1));
   return ParamsVsVar(std::move(fitParams),std::move(binLowEdges));
 }
 
@@ -198,13 +185,13 @@ ResFitter::Param::Param():
 
 }
 
-void ResFitter::Param::fill(const RooRealVar& iScale,const RooRealVar& iSigma,
+void ResFitter::Param::fill(const RooRealVar& iScale,const RooRealVar& iSigma,ResFitter::FitType iFitType,
 			    RooPlot* iPlot,const std::string& iLegName){
   scale = iScale.getValV();
   scaleErr = iScale.getError();
   sigma = iSigma.getValV();
   sigmaErr = iSigma.getError();
-  fitType=FitType::CB;
+  fitType=iFitType;
   plot = iPlot;
   legName = iLegName;
 }
@@ -219,9 +206,9 @@ void ResFitter::Param::fill(const RooRealVar& iScale,const RooRealVar& iSigmaL,c
   sigmaRErr = iSigmaR.getError();
   sigma = 0;
   sigmaErr = 0;
-  
   fitType=FitType::Cruijff;
   plot = iPlot;
+  legName = iLegName;
 }
 
 TGraph* ResFitter::ParamsVsVar::makeGraph(ValType valType,bool divideSigmaByMean)const

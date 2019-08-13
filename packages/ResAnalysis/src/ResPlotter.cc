@@ -1,4 +1,4 @@
-#include "RegresTester/RegresValidator.hh"
+#include "ResAnalysis/ResPlotter.hh"
 
 #include "Utility/DetIdTools.hh"
 #include "Utility/LogErr.hh"
@@ -14,11 +14,19 @@
 #include "RooHist.h"
 
 
-void RegValidator::Config::setDefaults()
+void ResPlotter::Config::setDefaults()
 {
   nrResBins = 300;
   resMin = 0.;
   resMax = 1.5;
+  fitMin = 0.5;
+  fitMax = 1.3;
+  fitMinHigh = 0.8;
+  fitMaxHigh = 1.1;
+  fitHighThres = 50;
+
+  binLabelPrecision = 3;
+  divideMeanBySigma = true;
 
   std::vector<std::pair<std::string,std::string> > varsTree1 = {
     {"sc.rawEnergy/mc.energy","raw energy"},
@@ -44,7 +52,7 @@ void RegValidator::Config::setDefaults()
   vars.push_back(varsTree2);
 }
 
-void RegValidator::VarNameData::autoFill()
+void ResPlotter::VarNameData::autoFill()
 {
   if(name=="mc.pt"){
     plotname = "E_{T}^{gen}";
@@ -69,9 +77,9 @@ void RegValidator::VarNameData::autoFill()
   }
 }
 
-void RegValidator::makeHists(std::vector<TTree*> trees,const std::string& label,const std::string& cuts,
-			     const std::string& vsVar1,const std::string& vsVar2,
-			     const std::vector<double>& vsVar1Bins,const std::vector<double>& vsVar2Bins)
+void ResPlotter::makeHists(std::vector<TTree*> trees,const std::string& label,const std::string& cuts,
+			   const std::string& vsVar1,const std::string& vsVar2,
+			   const std::vector<double>& vsVar1Bins,const std::vector<double>& vsVar2Bins)
 {
   
   if(trees.size()!=cfg_.vars.size()){
@@ -99,9 +107,8 @@ void RegValidator::makeHists(std::vector<TTree*> trees,const std::string& label,
 }
 
 std::vector<std::vector<std::pair<TH2*,std::string> > > 
-RegValidator::makeHists(TTree* tree,const std::vector<std::pair<std::string,std::string> >& vars,
-			const std::string& cuts)const
-			     
+ResPlotter::makeHists(TTree* tree,const std::vector<std::pair<std::string,std::string> >& vars,
+		      const std::string& cuts)const			    
 {
 
   std::vector<std::vector<std::pair<TH2*,std::string> > > outHistsVec(vsVar1Bins_.size()-1);
@@ -137,10 +144,10 @@ RegValidator::makeHists(TTree* tree,const std::vector<std::pair<std::string,std:
 }
 
 
-void RegValidator::printResHists(const std::vector<int>& histNrs,const std::string& baseOutName)const
+void ResPlotter::printFits(const std::vector<int>& histNrs,const std::string& baseOutName)const
 {
   bool twoComp = histNrs.size()==2;  
-  if(histNrs.size()!=2 || histNrs.size()!=3){
+  if(histNrs.size()!=2 && histNrs.size()!=3){
     LogErr << "Error, number of selected histograms must be either 2 or 3, not "<<histNrs.size()<<std::endl;
     return;
   }
@@ -179,7 +186,7 @@ void RegValidator::printResHists(const std::vector<int>& histNrs,const std::stri
       std::pair<TH2*,std::string>& histPair = hists[histNr];
       fitParams.push_back(resFitter_.makeFitVsVar(histPair.first,fitMin,fitMax,histPair.second));
     }
-
+  
     //now we plot the fit params vs the variable of interets
     auto graphSigma = plotFitParamsVsVarComp(fitParams,ResFitter::ValType::Sigma,cfg_.divideMeanBySigma);
     if(twoComp) formatTwoComp(graphSigma,vsVar1Label,idealLabel);
@@ -198,17 +205,16 @@ void RegValidator::printResHists(const std::vector<int>& histNrs,const std::stri
 	auto c1 = static_cast<TCanvas*>(gROOT->FindObject("c1"));
 	delete c1;
       }
-      printResComps(fitParams,outName,{0.55,1.2},"placeholder");
+      printResComps(fitParams,outName,{0.55,1.2},vsVar1LabelStr.str());
     }   
   }  
 }
 
-void RegValidator::printResComps(const std::vector<ResFitter::ParamsVsVar>& fitParamsVsVars,
-				 const std::string& baseName,const std::pair<float,float>& plotRange,
-				 const std::string& regionStr)const
+void ResPlotter::printResComps(const std::vector<ResFitter::ParamsVsVar>& fitParamsVsVars,
+			       const std::string& baseName,const std::pair<float,float>& plotRange,
+			       const std::string& regionStr)const
 {
   gStyle->SetOptFit(0);
-
 
   for(size_t binNr=0;binNr<fitParamsVsVars[0].params().size();binNr++){
     std::vector<ResFitter::Param> fitParams;
@@ -245,65 +251,11 @@ void RegValidator::printResComps(const std::vector<ResFitter::ParamsVsVar>& fitP
   }
 }
 
-void RegValidator::formatTwoComp(TGraph* graph,TPaveLabel* vsVar1Label,TPaveLabel* infoLabel,bool isMean)const
-{ 
-  float vsVar2Max = vsVar2Bins_.back();
-   
-  auto c1 = static_cast<TCanvas*>(gROOT->FindObject("c1"));
-  auto pads = HistFuncs::getFromCanvas<TPad>(c1,"TPad");
-  for(auto &pad : pads){
-    pad->SetGridx();
-    pad->SetGridy();
-    pad->Update();
-  }
-  pads[0]->cd();
-  auto topGraph = HistFuncs::getFromCanvas<TGraph>(pads[0],"TGraphErrors")[0];
-  topGraph->GetXaxis()->SetRangeUser(0.,vsVar2Max);
-  if(isMean) topGraph->GetYaxis()->SetRangeUser(0.9,1.05);
-  topGraph->SetTitle("");
-  auto leg = HistFuncs::getFromCanvas<TLegend>(pads[0],"TLegend")[0];
-  leg->SetTextSize(0.0440388);
-  //      HistFuncs::XYCoord(0.644766,0.155052,0.997773,0.301394).setNDC(leg);
-  HistFuncs::XYCoord(0.57386,0.155137,0.927253,0.301265).setNDC(leg);
-  leg->SetFillStyle(0);
-  leg->Draw();
-  vsVar1Label->Draw();
-  infoLabel->Draw();
-  
-  graph->SetTitle((";"+vsVar2_.axisLabel()).c_str());
-  graph->GetXaxis()->SetRangeUser(0,vsVar2Max);
-  graph->SetMarkerStyle(8);
-  graph->GetYaxis()->SetRangeUser(0.8,1.1);
-}
-
-void RegValidator::formatThreeComp(TGraph* graph,TPaveLabel* vsVar1Label,TPaveLabel* infoLabel,bool isMean)const 
+TGraph* ResPlotter::plotFitParamsVsVarComp(const std::vector<ResFitter::ParamsVsVar>& fits,
+					   ResFitter::ValType valType,
+					   bool divideSigmaByMean)const
 {
-  float vsVar2Max = vsVar2Bins_.back();
-  
-  auto c1 = static_cast<TCanvas*>(gROOT->FindObject("c1"));
-  c1->SetGridx();
-  c1->SetGridy();
-  c1->Update();
-  auto leg = HistFuncs::getFromCanvas<TLegend>(c1,"TLegend")[0];
-  //HistFuncs::XYCoord(0.644766,0.155052,0.997773,0.301394).setNDC(leg);   
-  HistFuncs::XYCoord(0.57386,0.155137,0.927253,0.301265).setNDC(leg);
-  leg->SetFillStyle(0);
-  leg->Draw();
-  
-  vsVar1Label->Draw();
-  infoLabel->Draw();
-  graph->SetTitle((";"+vsVar2_.axisLabel()).c_str());
-  graph->GetXaxis()->SetRangeUser(0,vsVar2Max); 
-  if(isMean) graph->GetYaxis()->SetRangeUser(0.9,1.05);
-}
-
-
-
-TGraph* RegValidator::plotFitParamsVsVarComp(const std::vector<ResFitter::ParamsVsVar>& fits,
-					     ResFitter::ValType valType,
-					     bool divideSigmaByMean)const
-{
-  if(fits.size()!=2 || fits.size()!=3){
+  if(fits.size()!=2 && fits.size()!=3){
     std::cout <<"Error: comparisions are only valid for 2 or 3 quanities, not "<<fits.size()<<std::endl;
     return nullptr;
   }
@@ -361,19 +313,19 @@ TGraph* RegValidator::plotFitParamsVsVarComp(const std::vector<ResFitter::Params
   }
 }
 
-RooPlot* RegValidator::plotResComp(std::vector<ResFitter::Param>& fitParams,
-				   const std::pair<float,float>& xRange)const
+RooPlot* ResPlotter::plotResComp(std::vector<ResFitter::Param>& fitParams,
+				 const std::pair<float,float>& xRange)const
 {
-  double max = 1.0;
+  double max = 0.;
   std::vector<std::pair<TGraph*,std::string>> legEntries;
   for(size_t fitNr=0;fitNr<fitParams.size();fitNr++){
     auto& fitParam = fitParams[fitNr];
     TGraph* graph = static_cast<TGraph*>(fitParam.plot->getHist("h_res"));
     setStyle(graph,fitNr);
     fitParam.plot->getCurve("model_Norm[res]")->SetLineColor(getColour(fitNr));
-    fitParam.plot->SetMaximum(max);
     fitParam.plot->remove("model_paramBox");
     fitParam.plot->SetTitle("");
+    max = std::max(fitParam.plot->GetMaximum(),max);
     if(fitNr==0){
       if(xRange.first!=xRange.second){
 	fitParam.plot->GetXaxis()->SetRangeUser(xRange.first,xRange.second);
@@ -395,6 +347,7 @@ RooPlot* RegValidator::plotResComp(std::vector<ResFitter::Param>& fitParams,
     meanLabel->Draw();
     legEntries.push_back({graph,fitParam.legName});
   }
+  fitParams[0].plot->SetMaximum(max*1.05);
   auto leg = HistFuncs::makeLegend(legEntries,0.167038,0.56446,0.488864,0.735192);
   leg->SetFillStyle(0);
   leg->Draw();
@@ -402,14 +355,68 @@ RooPlot* RegValidator::plotResComp(std::vector<ResFitter::Param>& fitParams,
   return fitParams[0].plot;
 }
 
-TGraph* makeRatio(TGraph* numer,TGraph* denom)
+void ResPlotter::formatTwoComp(TGraph* graph,TPaveLabel* vsVar1Label,TPaveLabel* infoLabel,bool isMean)const
+{ 
+  float vsVar2Max = vsVar2Bins_.back();
+   
+  auto c1 = static_cast<TCanvas*>(gROOT->FindObject("c1"));
+  auto pads = HistFuncs::getFromCanvas<TPad>(c1,"TPad");
+  for(auto &pad : pads){
+    pad->SetGridx();
+    pad->SetGridy();
+    pad->Update();
+  }
+  pads[0]->cd();
+  auto topGraph = HistFuncs::getFromCanvas<TGraph>(pads[0],"TGraphErrors")[0];
+  topGraph->GetXaxis()->SetRangeUser(0.,vsVar2Max);
+  if(isMean) topGraph->GetYaxis()->SetRangeUser(0.9,1.05);
+  topGraph->SetTitle("");
+  auto leg = HistFuncs::getFromCanvas<TLegend>(pads[0],"TLegend")[0];
+  leg->SetTextSize(0.0440388);
+  //      HistFuncs::XYCoord(0.644766,0.155052,0.997773,0.301394).setNDC(leg);
+  HistFuncs::XYCoord(0.57386,0.155137,0.927253,0.301265).setNDC(leg);
+  leg->SetFillStyle(0);
+  leg->Draw();
+  vsVar1Label->Draw();
+  infoLabel->Draw();
+  
+  graph->SetTitle((";"+vsVar2_.axisLabel()).c_str());
+  graph->GetXaxis()->SetRangeUser(0,vsVar2Max);
+  graph->SetMarkerStyle(8);
+  graph->GetYaxis()->SetRangeUser(0.8,1.1);
+}
+
+void ResPlotter::formatThreeComp(TGraph* graph,TPaveLabel* vsVar1Label,TPaveLabel* infoLabel,bool isMean)const 
+{
+  float vsVar2Max = vsVar2Bins_.back();
+  
+  auto c1 = static_cast<TCanvas*>(gROOT->FindObject("c1"));
+  c1->SetGridx();
+  c1->SetGridy();
+  c1->Update();
+  auto leg = HistFuncs::getFromCanvas<TLegend>(c1,"TLegend")[0];
+  //HistFuncs::XYCoord(0.644766,0.155052,0.997773,0.301394).setNDC(leg);   
+  HistFuncs::XYCoord(0.57386,0.155137,0.927253,0.301265).setNDC(leg);
+  leg->SetFillStyle(0);
+  leg->Draw();
+  
+  vsVar1Label->Draw();
+  infoLabel->Draw();
+  graph->SetTitle((";"+vsVar2_.axisLabel()).c_str());
+  graph->GetXaxis()->SetRangeUser(0,vsVar2Max); 
+  if(isMean) graph->GetYaxis()->SetRangeUser(0.9,1.05);
+}
+
+
+
+TGraph* ResPlotter::makeRatio(TGraph* numer,TGraph* denom)
 {
   std::vector<float> xValues;
   std::vector<float> xErrs;
   std::vector<float> yValues;
   std::vector<float> yErrs;
   if(numer->GetN()!=denom->GetN()){
-    std::cout <<"makeRatio: graphs have different entries "<<numer->GetN()<<" "<<denom->GetN()<<std::endl;
+    LogErr <<"makeRatio: graphs have different entries "<<numer->GetN()<<" "<<denom->GetN()<<std::endl;
     return nullptr;
   }
   for(int pointNr=0;pointNr<numer->GetN();pointNr++){
@@ -432,7 +439,7 @@ TGraph* makeRatio(TGraph* numer,TGraph* denom)
   return new TGraphErrors(xValues.size(),xValues.data(),yValues.data(),xErrs.data(),yErrs.data());
 }
 
-int RegValidator::getColour(unsigned int colourNr)
+int ResPlotter::getColour(unsigned int colourNr)
 {
   switch(colourNr%3){
   case 0:
@@ -445,7 +452,7 @@ int RegValidator::getColour(unsigned int colourNr)
   return 0;
 }
 
-int RegValidator::getMarkerStyle(unsigned int markerNr)
+int ResPlotter::getMarkerStyle(unsigned int markerNr)
 {
   switch(markerNr%3){
   case 0:

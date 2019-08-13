@@ -126,7 +126,7 @@ public:
   static TH1* makeCutValueForFixedEffHist(TTree* tree,int nrBins,float xMin,float xMax,const std::string& vsVar,const std::string& sampleCuts,const std::string& var,float eff);
   static std::vector<TH1*> makeCutValueForFixedEffHist(TTree* tree,int nrBins,float xMin,float xMax,const std::string& vsVar,const std::string& sampleCuts,const std::string& var,const std::vector<float>& eff);
   static std::pair<float,float> calTotBkgEffForFixedSigEffHist(TTree* sigTree,TTree* bkgTree,int nrBins,float xMin,float xMax,const std::string& vsVarSig,const std::string& vsVarBkg,const std::string& sampleCutsSig,const std::string& sampleCutsBkg,const std::string& var,float eff);
-  static void print(const std::string& fileName,const std::string& canvasName="c1");
+  static void print(const std::string& fileName,const std::string& canvasName="c1",bool reduced=false);
 
   static  double getValueAtXLinear(const TH1* hist,double x);
 
@@ -152,7 +152,7 @@ public:
   template<std::size_t N>
   static std::vector<std::array<double,N+1> > readTree(TTree* tree,const std::string& vars,const std::string& cuts);
   static std::vector<std::vector<float> > readTree(TTree* tree,const std::string& vars,const std::string& cuts);
-
+  static std::vector<std::vector<float> > readTreeBothEles(TTree* tree,const std::string& vars,const std::string& cuts);
   static TH1* compTwoVars(TTree* tree,int nrBins,float min,float xmax,const std::string& var1,const std::string& var2,const std::string& cuts,const std::string& var1LegName,const std::string& var2LegName);
   static TH1* compTwoVars(TTree* tree1,TTree* tree2,int nrBins,float min,float xmax,const std::string& var1,const std::string& var2,const std::string& cuts1,const std::string& cuts2,const std::string& var1LegName,const std::string& var2LegName,bool norm);
   static TH1* compTwoCuts(TTree* tree,int nrBins,float min,float xmax,const std::string& var,const std::string& baseCuts,const std::string& cuts1,const std::string& cuts2,const std::string& var1LegName,const std::string& var2LegName);
