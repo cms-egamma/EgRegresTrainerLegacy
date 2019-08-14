@@ -659,7 +659,7 @@ TGraph* HistFuncs::makeEffVsRejCurve(const TH1* sig,const TH1* bkg,bool sigGreat
 
 }
 
-void HistFuncs::print(const std::string& fileName,const std::string& canvasName)
+void HistFuncs::print(const std::string& fileName,const std::string& canvasName,bool reduced)
 {
   TCanvas* canvas = (TCanvas*) gROOT->FindObject(canvasName.c_str());
   //canvas->RedrawAxis();
@@ -671,11 +671,13 @@ void HistFuncs::print(const std::string& fileName,const std::string& canvasName)
   std::string outputNameC = outputName + ".C";
   std::string outputNamePdf = outputName + ".pdf";
   std::string outputNamePng = outputName + ".png";
-  canvas->Print(outputNameEps.c_str());
-  canvas->Print(outputNameGif.c_str());
-  canvas->Print(outputNameC.c_str());
-  canvas->Print(outputNamePdf.c_str());
+  if(!reduced){
+    canvas->Print(outputNameEps.c_str());
+    canvas->Print(outputNameGif.c_str());
+    canvas->Print(outputNamePdf.c_str());
+  }
   canvas->Print(outputNamePng.c_str());
+  canvas->Print(outputNameC.c_str());
 }
 
 
@@ -1022,6 +1024,7 @@ TGraph* HistFuncs::makeBkgEffForFixedSigEffHist(TTree* sigTree,TTree* bkgTree,in
   return graph;
 
 }
+			   
 
 TH1* HistFuncs::compTwoVars(TTree* tree,int nrBins,float xmin,float xmax,const std::string& var1,const std::string& var2,const std::string& cuts,const std::string& var1LegName,const std::string& var2LegName)
 {
@@ -1650,6 +1653,29 @@ std::vector<std::vector<float> > HistFuncs::readTree(TTree* tree,const std::stri
     output.emplace_back(varsVec);			
   }
   return output;
+}
+
+std::vector<std::vector<float> > HistFuncs::readTreeBothEles(TTree* tree,const std::string& vars,const std::string& cuts)
+{
+  std::vector<std::vector<float> > output;
+
+  std::string vars1 = boost::algorithm::replace_all_copy(vars,"{1}","1");
+  vars1 = boost::algorithm::replace_all_copy(vars1,"{2}","2");
+  std::string cuts1 = boost::algorithm::replace_all_copy(cuts,"{1}","1");
+  cuts1 = boost::algorithm::replace_all_copy(cuts1,"{2}","2");
+
+
+  std::string vars2 = boost::algorithm::replace_all_copy(vars,"{1}","2");
+  vars2 = boost::algorithm::replace_all_copy(vars2,"{2}","1");
+  std::string cuts2 = boost::algorithm::replace_all_copy(cuts,"{1}","2");
+  cuts2 = boost::algorithm::replace_all_copy(cuts2,"{2}","1");
+  std::cout <<"1: "<<vars1<<" : "<<cuts1<<std::endl;
+  std::cout <<"2: "<<vars2<<" : "<<cuts2<<std::endl;
+
+  auto output1 = readTree(tree,vars1,cuts1);
+  auto output2 = readTree(tree,vars2,cuts2);
+  output1.insert(output1.end(),output2.begin(),output2.end());
+  return output1;
 }
 
 

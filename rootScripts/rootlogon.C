@@ -9,6 +9,7 @@
   gSystem->Load("./libs/$SCRAM_ARCH/libUtility.so");
   gSystem->Load("./libs/$SCRAM_ARCH/libGBRLikelihood.so");
   gSystem->Load("./libs/$SCRAM_ARCH/libRegresTrainer.so");
+  gSystem->Load("./libs/$SCRAM_ARCH/libResAnalysis.so");
     
   gROOT->SetStyle("Plain");
   
