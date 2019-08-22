@@ -25,6 +25,8 @@ void ResPlotter::Config::setDefaults()
   fitMaxHigh = 1.1;
   fitHighThres = 50;
 
+  normalise = true;
+
   binLabelPrecision = 3;
   divideMeanBySigma = true;
 
@@ -95,9 +97,17 @@ void ResPlotter::makeHists(std::vector<TTree*> trees,const std::string& label,co
   vsVar2_ = vsVar2;
   label_ = label;
 
+  Long64_t minTreeEntries = std::numeric_limits<Long64_t>::max();
+  if(cfg_.normalise){
+    for(auto& tree : trees){
+      if(tree!=nullptr && tree->GetEntries()<minTreeEntries) minTreeEntries=tree->GetEntries();
+    }
+  }
+
   for(size_t treeNr=0;treeNr<trees.size();treeNr++){
     if(trees[treeNr]==nullptr) continue;
-    auto treeHists = makeHists(trees[treeNr],cfg_.vars[treeNr],cuts);
+    float treeWeight = cfg_.normalise ?  static_cast<float>(minTreeEntries)/static_cast<float>(trees[treeNr]->GetEntries()) : 1.0;
+    auto treeHists = makeHists(trees[treeNr],cfg_.vars[treeNr],cuts,treeWeight);
     for(size_t vsVar1BinNr=0;vsVar1BinNr<histsVec_.size();vsVar1BinNr++){
       for(auto& treeHist : treeHists[vsVar1BinNr]){
 	histsVec_[vsVar1BinNr].emplace_back(std::move(treeHist));
@@ -108,7 +118,7 @@ void ResPlotter::makeHists(std::vector<TTree*> trees,const std::string& label,co
 
 std::vector<std::vector<std::pair<TH2*,std::string> > > 
 ResPlotter::makeHists(TTree* tree,const std::vector<std::pair<std::string,std::string> >& vars,
-		      const std::string& cuts)const			    
+		      const std::string& cuts,float weight)const			    
 {
 
   std::vector<std::vector<std::pair<TH2*,std::string> > > outHistsVec(vsVar1Bins_.size()-1);
@@ -136,7 +146,7 @@ ResPlotter::makeHists(TTree* tree,const std::vector<std::pair<std::string,std::s
     size_t binNr=vsVar1BinNr(entry[0]);
     if(binNr<outHistsVec.size()){
       for(size_t histNr=0;histNr<outHistsVec[binNr].size();histNr++){
-	outHistsVec[binNr][histNr].first->Fill(entry[1],entry[histNr+2]);
+	outHistsVec[binNr][histNr].first->Fill(entry[1],entry[histNr+2],weight);
       }
     }
   }
@@ -325,6 +335,7 @@ RooPlot* ResPlotter::plotResComp(std::vector<ResFitter::Param>& fitParams,
     fitParam.plot->getCurve("model_Norm[res]")->SetLineColor(getColour(fitNr));
     fitParam.plot->remove("model_paramBox");
     fitParam.plot->SetTitle("");
+    
     max = std::max(fitParam.plot->GetMaximum(),max);
     if(fitNr==0){
       if(xRange.first!=xRange.second){

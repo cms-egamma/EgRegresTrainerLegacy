@@ -63,6 +63,8 @@ public:
     float fitMinHigh;
     float fitMaxHigh;
 
+    bool normalise;
+
     //plotting options
     int binLabelPrecision;
     bool divideMeanBySigma;    
@@ -142,7 +144,8 @@ private:
   std::vector<std::vector<std::pair<TH2*,std::string> > >  
   makeHists(TTree* tree,
 	    const std::vector<std::pair<std::string,std::string> >& vars,
-	    const std::string& cuts)const;
+	    const std::string& cuts,
+	    float weight=1.0)const;
 
   //prints all the plots comparing different resolutions for a given bin
   void printResComps(const std::vector<ResFitter::ParamsVsVar>& fitParams,
