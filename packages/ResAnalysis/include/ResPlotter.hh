@@ -63,6 +63,8 @@ public:
     float fitMinHigh;
     float fitMaxHigh;
 
+    bool normalise;
+
     //plotting options
     int binLabelPrecision;
     bool divideMeanBySigma;    
@@ -168,7 +170,7 @@ private:
     int markerStyle = getMarkerStyle(objNr);
     AnaFuncs::setHistAttributes(obj,colour,2,markerStyle,colour);
   }
-    
+  void normaliseHists();  
 };
 
 

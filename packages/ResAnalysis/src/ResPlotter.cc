@@ -25,28 +25,21 @@ void ResPlotter::Config::setDefaults()
   fitMaxHigh = 1.1;
   fitHighThres = 50;
 
+  normalise = true;
+
   binLabelPrecision = 3;
   divideMeanBySigma = true;
 
   std::vector<std::pair<std::string,std::string> > varsTree1 = {
-    {"sc.rawEnergy/mc.energy","raw energy"},
-    {"sc.corrEnergy/mc.energy","74X correction"},
-    {"sc.corrEnergyAlt/mc.energy","2018 UL correction"},
-    {"eleAltEnergy1.ecal/mc.energy","80X ecal"},
-    {"eleAltEnergy1.ecalTrk/mc.energy","80X ecal-trk"},
-    {"phoAltEnergy1.ecal/mc.energy","80X pho"},
-    {"ele.ecalEnergy/mc.energy","2018UL ecal"}, 
-    {"ele.energy/mc.energy","2018UL ecal-trk"},
-    {"pho.energy/mc.energy","2018UL pho"}
+    {"invTar","inverse target"},
+    {"(sc.rawEnergy+sc.rawESEnergy)/mc.energy","uncorrected SC energy"},
+    {"mean*invTar","corrected SC energy"}
   };
 
   std::vector<std::pair<std::string,std::string> > varsTree2 = {
-    {"sc.rawEnergy/mc.energy","raw energy, 102X"},
-    {"sc.corrEnergy/mc.energy","74X corr, 102X"},
-    {"ele.ecalEnergy/mc.energy","80X ecal, 102X"}, 
-    {"ele.energy/mc.energy","80X ecal-trk, 102X"},
-    {"pho.energy/mc.energy","80X pho, 102X"}
+    {"mean*invTar","E-p combination"}
   };
+
   vars.clear();
   vars.push_back(varsTree1);
   vars.push_back(varsTree2);
@@ -70,6 +63,10 @@ void ResPlotter::VarNameData::autoFill()
     plotname = "<#PU>";
     filename = "NrTruePU";
     unit = "";
+  }else if(name=="mc.energy"){
+    plotname = "mcEnergy";
+    filename = "Energy";
+    unit = "GeV";
   }else{
     plotname = name;
     filename = name;
@@ -97,13 +94,17 @@ void ResPlotter::makeHists(std::vector<TTree*> trees,const std::string& label,co
 
   for(size_t treeNr=0;treeNr<trees.size();treeNr++){
     if(trees[treeNr]==nullptr) continue;
+
     auto treeHists = makeHists(trees[treeNr],cfg_.vars[treeNr],cuts);
     for(size_t vsVar1BinNr=0;vsVar1BinNr<histsVec_.size();vsVar1BinNr++){
       for(auto& treeHist : treeHists[vsVar1BinNr]){
 	histsVec_[vsVar1BinNr].emplace_back(std::move(treeHist));
       }
-    }	
+    }
   }
+
+  if(cfg_.normalise) normaliseHists();
+  
 }
 
 std::vector<std::vector<std::pair<TH2*,std::string> > > 
@@ -325,6 +326,7 @@ RooPlot* ResPlotter::plotResComp(std::vector<ResFitter::Param>& fitParams,
     fitParam.plot->getCurve("model_Norm[res]")->SetLineColor(getColour(fitNr));
     fitParam.plot->remove("model_paramBox");
     fitParam.plot->SetTitle("");
+    
     max = std::max(fitParam.plot->GetMaximum(),max);
     if(fitNr==0){
       if(xRange.first!=xRange.second){
@@ -358,7 +360,8 @@ RooPlot* ResPlotter::plotResComp(std::vector<ResFitter::Param>& fitParams,
 void ResPlotter::formatTwoComp(TGraph* graph,TPaveLabel* vsVar1Label,TPaveLabel* infoLabel,bool isMean)const
 { 
   float vsVar2Max = vsVar2Bins_.back();
-   
+  float vsVar2Min = vsVar2Bins_.front();
+ 
   auto c1 = static_cast<TCanvas*>(gROOT->FindObject("c1"));
   auto pads = HistFuncs::getFromCanvas<TPad>(c1,"TPad");
   for(auto &pad : pads){
@@ -368,7 +371,7 @@ void ResPlotter::formatTwoComp(TGraph* graph,TPaveLabel* vsVar1Label,TPaveLabel*
   }
   pads[0]->cd();
   auto topGraph = HistFuncs::getFromCanvas<TGraph>(pads[0],"TGraphErrors")[0];
-  topGraph->GetXaxis()->SetRangeUser(0.,vsVar2Max);
+  topGraph->GetXaxis()->SetRangeUser(vsVar2Min,vsVar2Max);
   if(isMean) topGraph->GetYaxis()->SetRangeUser(0.9,1.05);
   topGraph->SetTitle("");
   auto leg = HistFuncs::getFromCanvas<TLegend>(pads[0],"TLegend")[0];
@@ -381,7 +384,7 @@ void ResPlotter::formatTwoComp(TGraph* graph,TPaveLabel* vsVar1Label,TPaveLabel*
   infoLabel->Draw();
   
   graph->SetTitle((";"+vsVar2_.axisLabel()).c_str());
-  graph->GetXaxis()->SetRangeUser(0,vsVar2Max);
+  graph->GetXaxis()->SetRangeUser(vsVar2Min,vsVar2Max);
   graph->SetMarkerStyle(8);
   graph->GetYaxis()->SetRangeUser(0.8,1.1);
 }
@@ -389,6 +392,7 @@ void ResPlotter::formatTwoComp(TGraph* graph,TPaveLabel* vsVar1Label,TPaveLabel*
 void ResPlotter::formatThreeComp(TGraph* graph,TPaveLabel* vsVar1Label,TPaveLabel* infoLabel,bool isMean)const 
 {
   float vsVar2Max = vsVar2Bins_.back();
+  float vsVar2Min = vsVar2Bins_.front();
   
   auto c1 = static_cast<TCanvas*>(gROOT->FindObject("c1"));
   c1->SetGridx();
@@ -403,7 +407,7 @@ void ResPlotter::formatThreeComp(TGraph* graph,TPaveLabel* vsVar1Label,TPaveLabe
   vsVar1Label->Draw();
   infoLabel->Draw();
   graph->SetTitle((";"+vsVar2_.axisLabel()).c_str());
-  graph->GetXaxis()->SetRangeUser(0,vsVar2Max); 
+  graph->GetXaxis()->SetRangeUser(vsVar2Min,vsVar2Max); 
   if(isMean) graph->GetYaxis()->SetRangeUser(0.9,1.05);
 }
 
@@ -466,3 +470,32 @@ int ResPlotter::getMarkerStyle(unsigned int markerNr)
 }
     
  
+//urgh this painful 
+//ideally we would do this all at hist creation time but we dont know what to normalise to
+//as it depends on the number of events passing selection the tree and we dont have an easy access
+//so we just normalise hists after the fact
+//note due to our rather odd vector layout (it organically grew) a single histogram is consists 
+//of multiple 2D histograms
+void ResPlotter::normaliseHists()
+{
+  size_t nrHists = !histsVec_.empty() ? histsVec_[0].size() : 0;
+  float minIntegral = std::numeric_limits<float>::max();
+  std::vector<float> histIntegrals;
+  for(size_t histNr=0;histNr<nrHists;histNr++){
+    float histIntegral = 0;
+    //now we sum over all vsVar1 bins
+    for(const auto& histVec : histsVec_){
+      TH2* hist = histVec[histNr].first;
+      histIntegral+=hist->Integral(0,hist->GetNbinsX()+1,0,hist->GetNbinsY());
+    }
+    minIntegral = std::min(minIntegral,histIntegral);
+    histIntegrals.push_back(histIntegral);
+  }
+  
+  for(size_t histNr=0;histNr<nrHists;histNr++){
+    for(const auto& histVec : histsVec_){
+      histVec[histNr].first->Scale(minIntegral/histIntegrals[histNr]);
+    }      
+  }
+  
+}

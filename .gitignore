@@ -9,7 +9,6 @@
 *.root
 *_C*
 *.pcm
-plot2016Ele.C
-plot2016Pho.C
+setpaths.txt
 applyRegression.sh
 compilePackage

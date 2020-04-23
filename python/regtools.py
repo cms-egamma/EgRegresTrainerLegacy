@@ -124,18 +124,23 @@ Regression.1.FixMean: {args.fix_mean}
 
         self.do_eb = True
         self.make_cfg()
+        # The way this is written, scram architecture has to be set manually
+        # This has to be done here and in the training script in scripts/
+        arch = "slc7_amd64_gcc700"
+        #arch = "slc6_amd64_gcc630"
+
         print "starting: {}".format(self.name())
-        subprocess.Popen(["bin/slc6_amd64_gcc700/RegressionTrainerExe",self.cfg_name()]).communicate()
+        subprocess.Popen(["bin/"+arch+"/RegressionTrainerExe",self.cfg_name()]).communicate()
         forest_eb_file = self.output_name()
-    
+
         self.do_eb = False
         self.make_cfg()
         print "starting: {}".format(self.name())
-        subprocess.Popen(["bin/slc6_amd64_gcc700/RegressionTrainerExe",self.cfg_name()]).communicate()
+        subprocess.Popen(["bin/"+arch+"/RegressionTrainerExe",self.cfg_name()]).communicate()
         forest_ee_file = self.output_name()
 
-        
-        subprocess.Popen(["bin/slc6_amd64_gcc700/RegressionApplierExe",self.input_testing,self.applied_name(),"--gbrForestFileEE",forest_ee_file,"--gbrForestFileEB",forest_eb_file,"--nrThreads","4","--treeName",self.tree_name,"--writeFullTree",self.write_full_tree,"--regOutTag",self.reg_out_tag]).communicate()
+
+        subprocess.Popen(["bin/"+arch+"/RegressionApplierExe",self.input_testing,self.applied_name(),"--gbrForestFileEE",forest_ee_file,"--gbrForestFileEB",forest_eb_file,"--nrThreads","4","--treeName",self.tree_name,"--writeFullTree",self.write_full_tree,"--regOutTag",self.reg_out_tag]).communicate()
 
         print "made ",self.applied_name()
 
