@@ -4,6 +4,12 @@
 /tmp/
 /bin/
 /dict/
+/plots/
+/results/
 *.root
 *_C*
 *.pcm
+plot2016Ele.C
+plot2016Pho.C
+applyRegression.sh
+compilePackage

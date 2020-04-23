@@ -30,7 +30,10 @@ def main():
     #prefixes all the regressions produced
     if args.era=='2016':
         base_reg_name = "scReg2016UL"
-        raise ValueError("era 2016 is not yet implimented".format(era))
+        input_ideal_ic  = "{}/DoubleElectron_FlatPt-1To300_2016ConditionsFlatPU0to70ECALGT_105X_mcRun2_asymptotic_IdealEcalIC_newSR_v2-v2_AODSIM_EgRegTreeV5.root".format(args.input_dir)
+        input_real_ic = "{}/DoubleElectron_FlatPt-1To300_2016ConditionsFlatPU0to70RAW_105X_mcRun2_asymptotic_newECALSR_v2-v2_AODSIM_EgRegTreeV5.root".format(args.input_dir)    
+        ideal_eventnr_cut = "evt.eventnr%5==0"  #4million electrons
+        real_eventnr_cut = "evt.eventnr%5==1" #4million electrons
     elif args.era=='2017':
         base_reg_name = "scReg2017UL"    
         input_ideal_ic  = "{}/DoubleElectron_FlatPt-1To300_2017ConditionsFlatPU0to70ECALGT_105X_mc2017_realistic_IdealEcalIC_v5-v2_AODSIM_EgRegTreeV1_extraVars.root".format(args.input_dir)
