@@ -6,9 +6,11 @@
 /dict/
 /plots/
 /results/
+/Fakes/
 *.root
 *_C*
 *.pcm
 setpaths.txt
 applyRegression.sh
 compilePackage
+.nfs*
