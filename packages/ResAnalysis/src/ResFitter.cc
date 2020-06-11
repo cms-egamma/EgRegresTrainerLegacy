@@ -86,12 +86,12 @@ ResFitter::Param ResFitter::makeDCBFit(TH1* hist,float xmin,float xmax,const std
   if(fixMeanDCB_) mean.setRange(1,1);
   RooRealVar cbSigma("#sigma_{CB}","CB Width", 0.05, 0.0002, 0.5,"");
 //  RooRealVar alpha1( "alpha_{1}", "alpha_{1}", 1.2 ,0,20);
-  RooRealVar alpha1( "alpha_{1}", "alpha_{1}", 1.0 ,1.0,1.0);
+  RooRealVar alpha1( "alpha_{1}", "alpha_{1}", 2.0 ,2.0,2.0);
   //alpha1.setRange(1,1); //sets alpha1 = 1
   //RooRealVar n1( "n_{1}", "n_{1}", 3 ,0,40);
   RooRealVar n1( "n_{1}", "n_{1}", 2 ,1.01,5000.);
 //  RooRealVar alpha2( "alpha_{2}", "alpha_{2}", 1.2 ,0,20);
-  RooRealVar alpha2( "alpha_{2}", "alpha_{2}", 2.0 ,2.0,2.0);
+  RooRealVar alpha2( "alpha_{2}", "alpha_{2}", 1.0 ,1.0,1.0);
   //alpha2.setRange(2,2); //sets alpha2 = 2
   //  RooRealVar n2( "n_{2}", "n_{2}", 0.81 ,0,40);
   RooRealVar n2( "n_{2}", "n_{2}", 2 ,1.01,5000.);
