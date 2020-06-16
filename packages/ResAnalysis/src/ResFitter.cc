@@ -74,7 +74,10 @@ ResFitter::Param ResFitter::makeCBFit(TH1* hist,float xmin,float xmax,const std:
 
 ResFitter::Param ResFitter::makeDCBFit(TH1* hist,float xmin,float xmax,const std::string& fitVarName)const
 {
-  RooRealVar  res("res","E^{reco}/E^{gen}", xmin,xmax,"");
+  //RooRealVar  res("res","E^{reco}/E^{gen}", xmin,xmax,""); //original label
+  xmin = 0.7; 
+  xmax = 1.5; //temp added to force x-axis range
+  RooRealVar  res("res","E^{gen}/E^{reco}", xmin,xmax,""); //inverted label
   res.setBins(10000,"cache") ;
   res.setMin("cache",xmin) ;
   res.setMax("cache",xmax) ;
@@ -85,14 +88,12 @@ ResFitter::Param ResFitter::makeDCBFit(TH1* hist,float xmin,float xmax,const std
   RooRealVar mean( "#DeltaE", "mean_{cb}", 1. ,0.5,1.5,""); 
   if(fixMeanDCB_) mean.setRange(1,1);
   RooRealVar cbSigma("#sigma_{CB}","CB Width", 0.05, 0.0002, 0.5,"");
-//  RooRealVar alpha1( "alpha_{1}", "alpha_{1}", 1.2 ,0,20);
-  RooRealVar alpha1( "alpha_{1}", "alpha_{1}", 2.0 ,2.0,2.0);
-  //alpha1.setRange(1,1); //sets alpha1 = 1
+  RooRealVar alpha1( "alpha_{1}", "alpha_{1}", 1.2 ,0,20); //let alpha float
+//  RooRealVar alpha1( "alpha_{1}", "alpha_{1}", 2.0 ,2.0,2.0); //set alpha constant
   //RooRealVar n1( "n_{1}", "n_{1}", 3 ,0,40);
   RooRealVar n1( "n_{1}", "n_{1}", 2 ,1.01,5000.);
-//  RooRealVar alpha2( "alpha_{2}", "alpha_{2}", 1.2 ,0,20);
-  RooRealVar alpha2( "alpha_{2}", "alpha_{2}", 1.0 ,1.0,1.0);
-  //alpha2.setRange(2,2); //sets alpha2 = 2
+  RooRealVar alpha2( "alpha_{2}", "alpha_{2}", 1.2 ,0,20); //let alpha float
+//  RooRealVar alpha2( "alpha_{2}", "alpha_{2}", 1.0 ,1.0,1.0); //set alpha constant
   //  RooRealVar n2( "n_{2}", "n_{2}", 0.81 ,0,40);
   RooRealVar n2( "n_{2}", "n_{2}", 2 ,1.01,5000.);
 
