@@ -19,10 +19,10 @@ void ResPlotter::Config::setDefaults()
   nrResBins = 300;
   resMin = 0.;
   resMax = 1.5;
-  //fitMin = 0.5; //original value
-  //fitMax = 1.3; //original value
-  fitMin = 0.7; 
-  fitMax = 1.5; 
+//  fitMin = 0.5;//original 
+//  fitMax = 1.3;//original
+  fitMin = 0.5;
+  fitMax = 1.5;
 
   fitMinHigh = 0.8;//original
   fitMaxHigh = 1.1;//original
@@ -40,8 +40,8 @@ void ResPlotter::Config::setDefaults()
   };
 
   std::vector<std::pair<std::string,std::string> > varsTree2 = {
-    //{"1.0/(mean*invTar)","corrected E-p combination"},
-    {"( (sc.rawEnergy+sc.rawESEnergy)*regRealMean/ele.trkPMode>0.025 && ele.trkPModeErr>10*ele.trkPMode && abs((sc.rawEnergy+sc.rawESEnergy)*regRealMean-ele.trkPMode) < 15*sqrt((ele.trkPMode)*(ele.trkPMode)+((sc.rawEnergy+sc.rawESEnergy)*regRealMean)*(sc.rawEnergy+sc.rawESEnergy)*regRealMean*regRealSigma*regRealSigma) )/(mean*invTar)+(!( (sc.rawEnergy+sc.rawESEnergy)*regRealMean/ele.trkPMode>0.025 && ele.trkPModeErr>10*ele.trkPMode && abs((sc.rawEnergy+sc.rawESEnergy)*regRealMean-ele.trkPMode) < 15*sqrt((ele.trkPMode)*(ele.trkPMode)+((sc.rawEnergy+sc.rawESEnergy)*regRealMean)*(sc.rawEnergy+sc.rawESEnergy)*regRealMean*regRealSigma*regRealSigma) )/(regRealMean*(sc.rawEnergy+sc.rawESEnergy))) ","corrected E-p combination"},
+    {"1.0/(mean*invTar)","corrected E-p combination"},
+    //{"( (sc.rawEnergy+sc.rawESEnergy)*regRealMean/ele.trkPMode>0.025 && ele.trkPModeErr<10*ele.trkPMode && abs((sc.rawEnergy+sc.rawESEnergy)*regRealMean-ele.trkPMode) < 15*sqrt((ele.trkPMode)*(ele.trkPMode)+((sc.rawEnergy+sc.rawESEnergy)*regRealMean)*(sc.rawEnergy+sc.rawESEnergy)*regRealMean*regRealSigma*regRealSigma) )/(mean*invTar)+(!( (sc.rawEnergy+sc.rawESEnergy)*regRealMean/ele.trkPMode>0.025 && ele.trkPModeErr<10*ele.trkPMode && abs((sc.rawEnergy+sc.rawESEnergy)*regRealMean-ele.trkPMode) < 15*sqrt((ele.trkPMode)*(ele.trkPMode)+((sc.rawEnergy+sc.rawESEnergy)*regRealMean)*(sc.rawEnergy+sc.rawESEnergy)*regRealMean*regRealSigma*regRealSigma) )/(regRealMean*(sc.rawEnergy+sc.rawESEnergy))) ","corrected E-p combination"},
     {"1.0/(invTar)","E-p combination"}
   };
 

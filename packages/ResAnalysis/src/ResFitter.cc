@@ -75,8 +75,6 @@ ResFitter::Param ResFitter::makeCBFit(TH1* hist,float xmin,float xmax,const std:
 ResFitter::Param ResFitter::makeDCBFit(TH1* hist,float xmin,float xmax,const std::string& fitVarName)const
 {
   //RooRealVar  res("res","E^{reco}/E^{gen}", xmin,xmax,""); //original label
-  xmin = 0.7; 
-  xmax = 1.5; //temp added to force x-axis range
   RooRealVar  res("res","E^{gen}/E^{reco}", xmin,xmax,""); //inverted label
   res.setBins(10000,"cache") ;
   res.setMin("cache",xmin) ;
