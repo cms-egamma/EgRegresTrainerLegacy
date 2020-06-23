@@ -25,7 +25,8 @@ void ResPlotter::Config::setDefaults()
   fitMax = 1.5;
 
   fitMinHigh = 0.8;//original
-  fitMaxHigh = 1.1;//original
+//  fitMaxHigh = 1.1;//original
+  fitMaxHigh = 1.5;//original
   fitHighThres = 50;
 
   normalise = true;
@@ -41,8 +42,8 @@ void ResPlotter::Config::setDefaults()
 
   std::vector<std::pair<std::string,std::string> > varsTree2 = {
     //{"1.0/(mean*invTar)","corrected E-p combination"},
-//    {"( (sc.rawEnergy+sc.rawESEnergy)*regIdealMean<200 && (sc.rawEnergy+sc.rawESEnergy)*regIdealMean/ele.trkPMode>0.025 && ele.trkPModeErr<10*ele.trkPMode && abs((sc.rawEnergy+sc.rawESEnergy)*regIdealMean-ele.trkPMode) < 15*sqrt((ele.trkPModeErr)*(ele.trkPModeErr)+((sc.rawEnergy+sc.rawESEnergy)*regIdealMean)*(sc.rawEnergy+sc.rawESEnergy)*regIdealMean*regRealSigma*regRealSigma) )/(mean*invTar)+( (!( (sc.rawEnergy+sc.rawESEnergy)*regIdealMean<200 && (sc.rawEnergy+sc.rawESEnergy)*regIdealMean/ele.trkPMode>0.025 && ele.trkPModeErr<10*ele.trkPMode && abs((sc.rawEnergy+sc.rawESEnergy)*regIdealMean-ele.trkPMode) < 15*sqrt((ele.trkPModeErr)*(ele.trkPModeErr)+((sc.rawEnergy+sc.rawESEnergy)*regIdealMean)*(sc.rawEnergy+sc.rawESEnergy)*regIdealMean*regRealSigma*regRealSigma)) )/(regIdealMean*(sc.rawEnergy+sc.rawESEnergy)/mc.energy)) ","corrected E-p combination"},
-    {"( (sc.rawEnergy+sc.rawESEnergy)*regIdealMean/ele.trkPMode>0.025 && ele.trkPModeErr<10*ele.trkPMode && abs((sc.rawEnergy+sc.rawESEnergy)*regIdealMean-ele.trkPMode) < 15*sqrt((ele.trkPModeErr)*(ele.trkPModeErr)+((sc.rawEnergy+sc.rawESEnergy)*regIdealMean)*(sc.rawEnergy+sc.rawESEnergy)*regIdealMean*regRealSigma*regRealSigma) )/(mean*invTar)+( (!( (sc.rawEnergy+sc.rawESEnergy)*regIdealMean/ele.trkPMode>0.025 && ele.trkPModeErr<10*ele.trkPMode && abs((sc.rawEnergy+sc.rawESEnergy)*regIdealMean-ele.trkPMode) < 15*sqrt((ele.trkPModeErr)*(ele.trkPModeErr)+((sc.rawEnergy+sc.rawESEnergy)*regIdealMean)*(sc.rawEnergy+sc.rawESEnergy)*regIdealMean*regRealSigma*regRealSigma)) )/(regIdealMean*(sc.rawEnergy+sc.rawESEnergy)/mc.energy)) ","corrected E-p combination"},
+    {"( (sc.rawEnergy+sc.rawESEnergy)*regIdealMean<200 && (sc.rawEnergy+sc.rawESEnergy)*regIdealMean/ele.trkPMode>0.025 && ele.trkPModeErr<10*ele.trkPMode && abs((sc.rawEnergy+sc.rawESEnergy)*regIdealMean-ele.trkPMode) < 15*sqrt((ele.trkPModeErr)*(ele.trkPModeErr)+((sc.rawEnergy+sc.rawESEnergy)*regIdealMean)*(sc.rawEnergy+sc.rawESEnergy)*regIdealMean*regRealSigma*regRealSigma) )/(mean*invTar)+( (!( (sc.rawEnergy+sc.rawESEnergy)*regIdealMean<200 && (sc.rawEnergy+sc.rawESEnergy)*regIdealMean/ele.trkPMode>0.025 && ele.trkPModeErr<10*ele.trkPMode && abs((sc.rawEnergy+sc.rawESEnergy)*regIdealMean-ele.trkPMode) < 15*sqrt((ele.trkPModeErr)*(ele.trkPModeErr)+((sc.rawEnergy+sc.rawESEnergy)*regIdealMean)*(sc.rawEnergy+sc.rawESEnergy)*regIdealMean*regRealSigma*regRealSigma)) )/(regIdealMean*(sc.rawEnergy+sc.rawESEnergy)/mc.energy)) ","corrected E-p combination"},
+//    {"( (sc.rawEnergy+sc.rawESEnergy)*regIdealMean/ele.trkPMode>0.025 && ele.trkPModeErr<10*ele.trkPMode && abs((sc.rawEnergy+sc.rawESEnergy)*regIdealMean-ele.trkPMode) < 15*sqrt((ele.trkPModeErr)*(ele.trkPModeErr)+((sc.rawEnergy+sc.rawESEnergy)*regIdealMean)*(sc.rawEnergy+sc.rawESEnergy)*regIdealMean*regRealSigma*regRealSigma) )/(mean*invTar)+( (!( (sc.rawEnergy+sc.rawESEnergy)*regIdealMean/ele.trkPMode>0.025 && ele.trkPModeErr<10*ele.trkPMode && abs((sc.rawEnergy+sc.rawESEnergy)*regIdealMean-ele.trkPMode) < 15*sqrt((ele.trkPModeErr)*(ele.trkPModeErr)+((sc.rawEnergy+sc.rawESEnergy)*regIdealMean)*(sc.rawEnergy+sc.rawESEnergy)*regIdealMean*regRealSigma*regRealSigma)) )/(regIdealMean*(sc.rawEnergy+sc.rawESEnergy)/mc.energy)) ","corrected E-p combination"},
     {"1.0/(invTar)","E-p combination"}
   };
 
