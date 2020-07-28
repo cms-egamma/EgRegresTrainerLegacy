@@ -18,10 +18,10 @@ void ResPlotter::Config::setDefaults()
 {
   nrResBins = 300;
 
-  //resMin and resMax weem to define where the plots end, both points and best fit graph
+  //resMin and resMax seem to define where the plots end, both points and best fit graph
   //Defaults: resMin = 0.0; resMax = 1.3;
-  resMin = 0.9;
-  resMax = 1.1;
+  resMin = 0.8;
+  resMax = 1.5;
 
   //fitMin and fitMax change x-axis range
   //default values: fitMin = 0.5; fitMax = 1.3
