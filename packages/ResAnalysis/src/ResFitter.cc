@@ -75,12 +75,16 @@ ResFitter::Param ResFitter::makeCBFit(TH1* hist,float xmin,float xmax,const std:
 ResFitter::Param ResFitter::makeDCBFit(TH1* hist,float xmin,float xmax,const std::string& fitVarName)const
 {
   //RooRealVar  res("res","E^{reco}/E^{gen}", xmin,xmax,""); //original label
+  xmin = 0.9; xmax = 1.1; //temporary, restricting fit range to get nicer looking plot
   RooRealVar  res("res","E^{gen}/E^{reco}", xmin,xmax,""); //inverted label
   res.setBins(10000,"cache") ;
   res.setMin("cache",xmin) ;
   res.setMax("cache",xmax) ;
-
-  float nrInRange = AnaFuncs::getHistIntegral(hist,xmin,xmax);
+  
+  float xminFit = xmin; float xmaxFit = xmax;
+  float xAxisMin = 0.8; float xAxisMax = 1.5;
+  //float nrInRange = AnaFuncs::getHistIntegral(hist,xmin,xmax);//original
+  float nrInRange = AnaFuncs::getHistIntegral(hist,xminFit,xmaxFit);
 
   RooRealVar  nsig("N_{S}", "#signal events", nrInRange,nrInRange*0.9,nrInRange*1.1);
   RooRealVar mean( "#DeltaE", "mean_{cb}", 1. ,0.5,1.5,""); 
@@ -106,7 +110,8 @@ ResFitter::Param ResFitter::makeDCBFit(TH1* hist,float xmin,float xmax,const std
   model.fitTo(data,RooFit::FitOptions("mh"),RooFit::Optimize(0),RooFit::Timer(1));
   model.fitTo(data,RooFit::FitOptions("mh"),RooFit::Optimize(0),RooFit::Timer(1));
 
-  RooPlot* plot = res.frame(RooFit::Range(xmin,xmax),RooFit::Bins(100));
+  //RooPlot* plot = res.frame(RooFit::Range(xmin,xmax),RooFit::Bins(100));//original
+  RooPlot* plot = res.frame(RooFit::Range(xAxisMin,xAxisMax),RooFit::Bins(100));
 
   data.plotOn(plot,RooFit::MarkerSize(1.0));
   model.plotOn(plot); 

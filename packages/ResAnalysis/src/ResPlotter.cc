@@ -17,16 +17,22 @@
 void ResPlotter::Config::setDefaults()
 {
   nrResBins = 300;
-  resMin = 0.;
-  resMax = 1.5;
-//  fitMin = 0.5;//original 
-//  fitMax = 1.3;//original
-  fitMin = 0.5;
+
+  //resMin and resMax weem to define where the plots end, both points and best fit graph
+  //Defaults: resMin = 0.0; resMax = 1.3;
+  resMin = 0.9;
+  resMax = 1.1;
+
+  //fitMin and fitMax change x-axis range
+  //default values: fitMin = 0.5; fitMax = 1.3
+  fitMin = 0.8;
   fitMax = 1.5;
 
-  fitMinHigh = 0.8;//original
-//  fitMaxHigh = 1.1;//original
-  fitMaxHigh = 1.5;//original
+  //fitMinHigh and fitMaxHigh only apply if the value of one of the graphs exceeds
+  //fitHighThres, the default of which is: fitHighThres = 50;
+  //Defaults: fitMinHigh = 0.8; fitMaxHigh = 1.1;
+  fitMinHigh = 0.8;
+  fitMaxHigh = 1.5;
   fitHighThres = 50;
 
   normalise = true;
