@@ -106,11 +106,17 @@ ResFitter::Param ResFitter::makeDCBFit(TH1* hist,float xmin,float xmax,const std
   //model.fitTo(data,RooFit::FitOptions("mh"),RooFit::Optimize(0),RooFit::Timer(1));//original
 
   //Adding a custom fitting range
-  float lowRange = hist->GetMean() - 1.5*hist->GetStdDev();
-  float highRange = hist->GetMean() + 1.5*hist->GetStdDev() ;
-  model.fitTo(data, RooFit::Range(lowRange,highRange));
+  float lowRange = hist->GetMean() - 2*hist->GetStdDev();
+  float highRange = hist->GetMean() + 2*hist->GetStdDev();
+  std::cout << "Fit range: " << lowRange << " to " << highRange << std::endl;
+  model.fitTo(data,
+              RooFit::Range(lowRange,highRange),
+              RooFit::FitOptions("mh"),
+              RooFit::Optimize(0),
+              RooFit::Timer(1)
+             );
 
-  RooPlot* plot = res.frame(RooFit::Range(xmin,xmax),RooFit::Bins(100));//original
+  RooPlot* plot = res.frame(RooFit::Range(xmin,xmax),RooFit::Bins(100));
 
   data.plotOn(plot,RooFit::MarkerSize(1.0));
   model.plotOn(plot); 
@@ -124,7 +130,8 @@ ResFitter::Param ResFitter::makeDCBFit(TH1* hist,float xmin,float xmax,const std
 
 ResFitter::Param ResFitter::makeCruijffFit(TH1* hist,float xmin,float xmax,const std::string& fitVarName)const
 {
-  RooRealVar  res("res","E^{reco}/E^{gen}", xmin,xmax,"");
+  //RooRealVar  res("res","E^{reco}/E^{gen}", xmin,xmax,"");//original
+  RooRealVar  res("res","E^{gen}/E^{reco}", xmin,xmax,"");
   res.setBins(10000,"cache") ;
   res.setMin("cache",xmin) ;
   res.setMax("cache",xmax) ;
@@ -140,7 +147,16 @@ ResFitter::Param ResFitter::makeCruijffFit(TH1* hist,float xmin,float xmax,const
   RooDataHist data("res","E^{reco}/E^{gen}",res,hist);
    
   RooAddPdf model("model", "model", RooArgList(cruijff), RooArgList(nsig));
-  model.fitTo(data,RooFit::FitOptions("mh"),RooFit::Optimize(0),RooFit::Timer(1),RooFit::PrintEvalErrors(-1));
+  //model.fitTo(data,RooFit::FitOptions("mh"),RooFit::Optimize(0),RooFit::Timer(1),RooFit::PrintEvalErrors(-1));
+  float lowRange = hist->GetMean() - 2*hist->GetStdDev();
+  float highRange = hist->GetMean() + 2*hist->GetStdDev();
+  model.fitTo(data,
+        RooFit::Range(lowRange,highRange),
+        RooFit::FitOptions("mh"),
+        RooFit::Optimize(0),
+        RooFit::Timer(1),
+        RooFit::PrintEvalErrors(-1)
+       );
   auto fitRes = model.fitTo(data,RooFit::Optimize(1),RooFit::Timer(0),RooFit::PrintEvalErrors(-1),RooFit::Save(1));
   if( (sigmaL.getValV()<=0.001 || sigmaR.getValV()<=0.001) || fitRes->edm()>10){
     std::cout <<" fit status "<<fitRes->status()<<" sigma "<<sigmaL.getValV()<<" "<<sigmaR.getValV()<<" nrsig "<<nsig.getValV()<<" edm "<<fitRes->edm()<<std::endl;
