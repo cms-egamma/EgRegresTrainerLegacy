@@ -20,7 +20,7 @@ def main():
     #step 2, apply the mean to the real IC sample and save the result in a tree
     #step 3, retrain the resolution for the real IC on the corrected energy
     run_step1 = True
-    run_step2 = True
+    run_step2 = True 
     run_step3 = True
 
     #setup the selection (event number cuts come later)
@@ -42,8 +42,8 @@ def main():
         real_eventnr_cut = "evt.eventnr%2==0" #events in the ntuple are different so can get away with this
     elif args.era=='2018':
         base_reg_name = "scReg2018UL"    
-        input_ideal_ic  = "{}/DoubleElectron_FlatPt-1To300_2018ConditionsFlatPU0to70ECALGT_105X_upgrade2018_realistic_IdealEcalIC_v4-v1_AODSIM_EgRegTreeV5_partStatsV2.root".format(args.input_dir)
-        input_real_ic = "{}/DoubleElectron_FlatPt-1To300_2018ConditionsFlatPU0to70RAW_105X_upgrade2018_realistic_v4-v1_AODSIM_EgRegTreeV5_partStatsV2.root".format(args.input_dir)    
+        input_ideal_ic  = "{}/DoubleElectron_FlatPt-1To300_FlatPU0to70_106X_upgrade2018_realistic_v11_Ecal3-v4_AODSIM_EgRegTree/DoubleElectron_FlatPt-1To300_FlatPU0to70_106X_upgrade2018_realistic_v11_Ecal3-v4_AODSIM_EgRegTree.root".format(args.input_dir)
+        input_real_ic = "{}/DoubleElectron_FlatPt-1To300_FlatPU0to70_106X_upgrade2018_realistic_v11_Ecal3-v4_AODSIM_EgRegTree/DoubleElectron_FlatPt-1To300_FlatPU0to70_106X_upgrade2018_realistic_v11_Ecal3-v4_AODSIM_EgRegTree.root".format(args.input_dir)    
         ideal_eventnr_cut = "evt.eventnr%5==0"  #4million electrons
         real_eventnr_cut = "evt.eventnr%5==1" #4million electrons
     else:
