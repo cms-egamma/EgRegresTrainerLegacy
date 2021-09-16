@@ -30,13 +30,18 @@ def main():
     #prefixes all the regressions produced
     if args.era=='2016':
         base_reg_name = "scReg2016UL"
-        raise ValueError("era 2016 is not yet implimented".format(era))
+        input_ideal_ic  = "{}/DoubleElectron_FlatPt-1To300_2016ConditionsFlatPU0to70ECALGT_105X_mcRun2_asymptotic_IdealEcalIC_newSR_v2-v2_AODSIM_EgRegTreeV5.root".format(args.input_dir)
+        input_real_ic = "{}/DoubleElectron_FlatPt-1To300_2016ConditionsFlatPU0to70RAW_105X_mcRun2_asymptotic_newECALSR_v2-v2_AODSIM_EgRegTreeV5.root".format(args.input_dir)
+        ideal_eventnr_cut = "evt.eventnr%5==0"  #4million electrons
+        real_eventnr_cut = "evt.eventnr%5==1" #4million electrons
+
     elif args.era=='2017':
         base_reg_name = "scReg2017UL"    
         input_ideal_ic  = "{}/DoubleElectron_FlatPt-1To300_2017ConditionsFlatPU0to70ECALGT_105X_mc2017_realistic_IdealEcalIC_v5-v2_AODSIM_EgRegTreeV1_extraVars.root".format(args.input_dir)
         input_real_ic = "{}/DoubleElectron_FlatPt-1To300_2017ConditionsFlatPU0to70_105X_mc2017_realistic_v5-v2_AODSIM_EgRegTreeV1_4.root".format(args.input_dir)   
         ideal_eventnr_cut = "evt.eventnr%2==0"
         real_eventnr_cut = "evt.eventnr%2==0" #events in the ntuple are different so can get away with this
+
     elif args.era=='2018':
         base_reg_name = "scReg2018UL"    
         input_ideal_ic  = "{}/DoubleElectron_FlatPt-1To300_2018ConditionsFlatPU0to70ECALGT_105X_upgrade2018_realistic_IdealEcalIC_v4-v1_AODSIM_EgRegTreeV5_partStatsV2.root".format(args.input_dir)
@@ -83,7 +88,9 @@ steps to be run:
     input_for_res_training = str(regArgs.applied_name()) #save the output name before we change it
     input_for_input_for_res_training = str(input_real_ic)
     
-    if run_step2: subprocess.Popen(["bin/slc6_amd64_gcc700/RegressionApplierExe",input_for_input_for_res_training,input_for_res_training,"--gbrForestFileEE",forest_ee_file,"--gbrForestFileEB",forest_eb_file,"--nrThreads","4","--treeName",regArgs.tree_name,"--writeFullTree","1","--regOutTag","Ideal"]).communicate()
+    # Set scram arch
+    arch = "slc7_amd64_gcc700"
+    if run_step2: subprocess.Popen(["bin/"+arch+"/RegressionApplierExe",input_for_input_for_res_training,input_for_res_training,"--gbrForestFileEE",forest_ee_file,"--gbrForestFileEB",forest_eb_file,"--nrThreads","4","--treeName",regArgs.tree_name,"--writeFullTree","1","--regOutTag","Ideal"]).communicate()
 
     regArgs.base_name = "{}_RealIC_RealTraining".format(base_reg_name)
     regArgs.input_training = input_for_res_training
