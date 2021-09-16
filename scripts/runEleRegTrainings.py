@@ -31,7 +31,12 @@ def main():
 
     if args.era=='2016':
         era_name = "2016UL"
-        raise ValueError("era 2016 is not yet implimented".format(era))
+        input_ideal_ic  = "{}/DoubleElectron_FlatPt-1To300_2016ConditionsFlatPU0to70ECALGT_105X_realistic_IdealEcalIC_v2-v2.root".format(args.input_dir)
+        input_real_ic = "{}/DoubleElectron_FlatPt-1To300_2016ConditionsFlatPU0to70RAW_105X_realistic_v2-v2.root".format(args.input_dir)
+        ideal_eventnr_cut = "evt.eventnr%5==0"
+        real_eventnr_cut = "evt.eventnr%5==1"
+        ep_eventnr_cut = "evt.eventnr%5==2"
+
     elif args.era=='2017':
         era_name = "2017UL"
         input_ideal_ic  = "{}/DoubleElectron_FlatPt-1To300_2017ConditionsFlatPU0to70ECALGT_105X_mc2017_realistic_IdealEcalIC_v5-v2_AODSIM_EgRegTreeV5Refined.root".format(args.input_dir)
