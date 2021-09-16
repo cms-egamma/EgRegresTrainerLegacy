@@ -68,7 +68,10 @@ def main():
 
     regArgs.base_name = "regPhoEcal{era_name}_RealIC_IdealTraining".format(era_name=era_name)
     input_for_res_training = str(regArgs.applied_name()) #save the output name before we change it
-    if run_step2: subprocess.Popen(["bin/slc6_amd64_gcc700/RegressionApplierExe",input_real_ic,input_for_res_training,"--gbrForestFileEE",forest_ee_file,"--gbrForestFileEB",forest_eb_file,"--nrThreads","4","--treeName",regArgs.tree_name,"--writeFullTree","1","--regOutTag","Ideal"]).communicate()
+
+    # Set scram arch
+    arch = "slc7_amd64_gcc700"
+    if run_step2: subprocess.Popen(["bin/"+arch+"/RegressionApplierExe",input_real_ic,input_for_res_training,"--gbrForestFileEE",forest_ee_file,"--gbrForestFileEB",forest_eb_file,"--nrThreads","4","--treeName",regArgs.tree_name,"--writeFullTree","1","--regOutTag","Ideal"]).communicate()
     
     #step3 we now run over re-train with the REAL sample for the sigma, changing the target to have the correction applied 
     print "starting step3"
