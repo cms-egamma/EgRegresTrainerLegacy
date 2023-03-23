@@ -32,22 +32,11 @@ void ResPlotter::Config::setDefaults()
 
   std::vector<std::pair<std::string,std::string> > varsTree1 = {
     {"sc.rawEnergy/mc.energy","raw energy"},
-    {"sc.corrEnergy/mc.energy","74X correction"},
-    {"sc.corrEnergyAlt/mc.energy","2018 UL correction"},
-    {"eleAltEnergy1.ecal/mc.energy","80X ecal"},
-    {"eleAltEnergy1.ecalTrk/mc.energy","80X ecal-trk"},
-    {"phoAltEnergy1.ecal/mc.energy","80X pho"},
-    {"ele.ecalEnergy/mc.energy","2018UL ecal"}, 
-    {"ele.energy/mc.energy","2018UL ecal-trk"},
-    {"pho.energy/mc.energy","2018UL pho"}
+    {"mean*invTar","2016UL corrected energy"},
   };
 
   std::vector<std::pair<std::string,std::string> > varsTree2 = {
     {"sc.rawEnergy/mc.energy","raw energy, 102X"},
-    {"sc.corrEnergy/mc.energy","74X corr, 102X"},
-    {"ele.ecalEnergy/mc.energy","80X ecal, 102X"}, 
-    {"ele.energy/mc.energy","80X ecal-trk, 102X"},
-    {"pho.energy/mc.energy","80X pho, 102X"}
   };
   vars.clear();
   vars.push_back(varsTree1);
