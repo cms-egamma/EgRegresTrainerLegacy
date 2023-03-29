@@ -13,7 +13,7 @@ if __name__ =='__main__':
     args = parser.parse_args()
 
     
-    base_cmd = "./bin/slc6_amd64_gcc700/RegressionApplierExe {input_file} {output_file} --gbrForestFileEB {gbrEB} --gbrForestFileEE {gbrEE} --nrThreads 4 --writeFullTree 1 --regOutTag {reg_out_tag}"
+    base_cmd = "./bin/slc7_amd64_gcc700/RegressionApplierExe {input_file} {output_file} --gbrForestFileEB {gbrEB} --gbrForestFileEE {gbrEE} --nrThreads 4 --writeFullTree 1 --regOutTag {reg_out_tag}"
         
     ecal_ideal_file = "ecalIdealTmp.root"
 
