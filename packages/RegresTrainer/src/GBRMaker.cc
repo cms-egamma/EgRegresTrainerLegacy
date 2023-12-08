@@ -20,7 +20,7 @@
 #include "RegresTrainer/GBRMaker.h"
 #include "RegresTrainer/Utilities.h"
 #include "RegresTrainer/GBRTrainer.h"
-#include "CondFormats/EgammaObjects/interface/GBRForest.h"
+#include "CondFormats/GBRForest/interface/GBRForest.h"
 #include "RegresTrainer/GBRApply.h"
 #include "RegresTrainer/VariableCorrectionApply.h"
 #include "RegresTrainer/SmearingCorrection.h"

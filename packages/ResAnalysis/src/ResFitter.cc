@@ -56,8 +56,8 @@ ResFitter::Param ResFitter::makeCBFit(TH1* hist,float xmin,float xmax,const std:
   RooDataHist data("res","E^{reco}/E^{gen}",res,hist);
    
   RooAddPdf      model("model", "model", RooArgList(cb), RooArgList(nsig));
-  model.fitTo(data,RooFit::FitOptions("mh"),RooFit::Optimize(0),RooFit::Timer(1));
-  auto fitRes = model.fitTo(data,RooFit::FitOptions("mh"),RooFit::Optimize(0),RooFit::Timer(1));
+  model.fitTo(data,RooFitLegacy::FitOptions("mh"),RooFit::Optimize(0),RooFit::Timer(1));
+  auto fitRes = model.fitTo(data,RooFitLegacy::FitOptions("mh"),RooFit::Optimize(0),RooFit::Timer(1));
   std::cout <<" fit status "<<fitRes->status()<<std::endl;
   RooPlot* plot = res.frame(RooFit::Range(xmin,xmax),RooFit::Bins(100));
 
@@ -100,8 +100,8 @@ ResFitter::Param ResFitter::makeDCBFit(TH1* hist,float xmin,float xmax,const std
    
   RooAddPdf      model("model", "model", RooArgList(dcb), RooArgList(nsig));
   //auto& model = cb;
-  model.fitTo(data,RooFit::FitOptions("mh"),RooFit::Optimize(0),RooFit::Timer(1));
-  model.fitTo(data,RooFit::FitOptions("mh"),RooFit::Optimize(0),RooFit::Timer(1));
+  model.fitTo(data,RooFitLegacy::FitOptions("mh"),RooFit::Optimize(0),RooFit::Timer(1));
+  model.fitTo(data,RooFitLegacy::FitOptions("mh"),RooFit::Optimize(0),RooFit::Timer(1));
 
   RooPlot* plot = res.frame(RooFit::Range(xmin,xmax),RooFit::Bins(100));
 
@@ -133,7 +133,7 @@ ResFitter::Param ResFitter::makeCruijffFit(TH1* hist,float xmin,float xmax,const
   RooDataHist data("res","E^{reco}/E^{gen}",res,hist);
    
   RooAddPdf model("model", "model", RooArgList(cruijff), RooArgList(nsig));
-  model.fitTo(data,RooFit::FitOptions("mh"),RooFit::Optimize(0),RooFit::Timer(1),RooFit::PrintEvalErrors(-1));
+  model.fitTo(data,RooFitLegacy::FitOptions("mh"),RooFit::Optimize(0),RooFit::Timer(1),RooFit::PrintEvalErrors(-1));
   auto fitRes = model.fitTo(data,RooFit::Optimize(1),RooFit::Timer(0),RooFit::PrintEvalErrors(-1),RooFit::Save(1));
   if( (sigmaL.getValV()<=0.001 || sigmaR.getValV()<=0.001) || fitRes->edm()>10){
     std::cout <<" fit status "<<fitRes->status()<<" sigma "<<sigmaL.getValV()<<" "<<sigmaR.getValV()<<" nrsig "<<nsig.getValV()<<" edm "<<fitRes->edm()<<std::endl;

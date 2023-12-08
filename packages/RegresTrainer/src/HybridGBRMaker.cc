@@ -38,7 +38,7 @@
 #include "GBRLikelihood/RooHybridBDTAutoPdf.h"
 #include "GBRLikelihood/RooDoubleCBFast.h"
 #include "GBRLikelihood/HybridGBRForestFlex.h"
-#include "CondFormats/EgammaObjects/interface/GBRForestD.h"
+#include "CondFormats/GBRForest/interface/GBRForestD.h"
 
 #include <iostream>
 #include <sstream>

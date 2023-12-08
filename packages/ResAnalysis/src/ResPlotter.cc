@@ -12,6 +12,7 @@
 #include "TStyle.h"
 #include "RooPlot.h"
 #include "RooHist.h"
+#include "TROOT.h"
 
 
 void ResPlotter::Config::setDefaults()
