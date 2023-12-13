@@ -32,7 +32,7 @@ void ResPlotter::Config::setDefaults()
   divideMeanBySigma = true;
 
   std::vector<std::pair<std::string,std::string> > varsTree1 = {
-    {"sc.rawEnergy/mc.energy","raw energy"},
+								/*  {"sc.rawEnergy/mc.energy","raw energy"},
     {"sc.corrEnergy/mc.energy","74X correction"},
     {"sc.corrEnergyAlt/mc.energy","2018 UL correction"},
     {"eleAltEnergy1.ecal/mc.energy","80X ecal"},
@@ -40,7 +40,18 @@ void ResPlotter::Config::setDefaults()
     {"phoAltEnergy1.ecal/mc.energy","80X pho"},
     {"ele.ecalEnergy/mc.energy","2018UL ecal"}, 
     {"ele.energy/mc.energy","2018UL ecal-trk"},
-    {"pho.energy/mc.energy","2018UL pho"}
+    {"pho.energy/mc.energy","2018UL pho"}*/
+
+    {"ele.energy/mc.energy","energy"}, 
+
+    {"ele.trkp[ele.bestTrkIndx]/mc.energy","track p"}, //1
+    {"ele.trkp[ele.bestTrkIndx]/mc.energy*regTrkMean","corr. track p"},//2
+    {"ele.energy*regEcalMean/mc.energy","corr. energy"},//3
+    {"invTar*mean","E/p combination"},//4
+    {"recoEle.energy/mc.energy","offline energy"},//5
+    {"recoEle.trkPMode/mc.energy","offline trk p (mode)"},//6
+    {"recoEle.trkPInn/mc.energy","offline trk p (inn)"},//7
+    {"recoEle.trkPVtx/mc.energy","offline trk p (vtx)"},//8
   };
 
   std::vector<std::pair<std::string,std::string> > varsTree2 = {

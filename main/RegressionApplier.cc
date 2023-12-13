@@ -1,5 +1,5 @@
-#include "CondFormats/EgammaObjects/interface/GBRForest.h"
-#include "CondFormats/EgammaObjects/interface/GBRForestD.h"
+#include "CondFormats/GBRForest/interface/GBRForest.h"
+#include "CondFormats/GBRForest/interface/GBRForestD.h"
 
 #include "Utility/HistFuncs.hh"
 #include "Utility/CmdLineInt.hh"
@@ -40,6 +40,30 @@ public:
     tree->SetBranchAddress("invTar",&invTar);
   }
 };
+
+class RegTransformer{
+  double limLow_;
+  double limHigh_;
+  double offset_;
+  double scale_;
+public:
+  RegTransformer(double low,double high):
+    limLow_(low),limHigh_(high),
+    offset_(limLow_ + 0.5*(limHigh_-limLow_)),
+    scale_(0.5*(limHigh_-limLow_))
+  {}
+
+  double operator()(float rawVal)const{
+    return offset_ + scale_*vdt::fast_sin(rawVal);
+  }
+};
+	   
+//forgive me as I have sinned
+const RegTransformer *gMeanTransform = nullptr;
+const RegTransformer *gSigmaTransform = nullptr;
+
+  
+  
 
 class GBRForestCont{
 private:
@@ -101,6 +125,11 @@ int main(int argc, char** argv)
   char regOutTagChar[1024];
   int nrThreads;
   double highEtThres;
+  double meanLow;
+  double meanHigh;
+  double sigmaLow;
+  double sigmaHigh;
+  
   bool writeFullTree;
   CmdLineInt cmdLineInt(argv[0]);
   cmdLineInt.addNonOption(inFilename,true," ","input files");
@@ -110,14 +139,27 @@ int main(int argc, char** argv)
   cmdLineInt.addOption("gbrForestFileEBHighEt",gbrFilenameEBHighEt,"","gbrForestFile for barrel high et, highEtThres must be set for this to be read");
   cmdLineInt.addOption("gbrForestFileEEHighEt",gbrFilenameEEHighEt,"","gbrForestFile for endcap high et, highEtThres must be set for this to be read");
   cmdLineInt.addOption("highEtThres",&highEtThres,std::numeric_limits<double>::max(),"threshold at which to apply the high Et forests");
-  cmdLineInt.addOption("etBinVar",etBinVar,"(sc.rawEnergy+sc.rawESEnergy)*sin(2*atan(exp(-1*sc.scEta)))","et variable to bin vs");
+  //cmdLineInt.addOption("etBinVar",etBinVar,"(sc.rawEnergy+sc.rawESEnergy)*sin(2*atan(exp(-1*sc.scEta)))","et variable to bin vs");
+  cmdLineInt.addOption("etBinVar",etBinVar,"mc.pt","et variable to bin vs");
   cmdLineInt.addOption("nrThreads",&nrThreads,1,"number of threads for reading tree");
   cmdLineInt.addOption("treeName",treeName,"egRegTree"," name of the tree");
   cmdLineInt.addOption("regOutTag",regOutTagChar,"","tag of the output regression branches , eg \"reg{regOutTagChar}Mean\" if writing full tree");
   cmdLineInt.addOption("writeFullTree",&writeFullTree,false," writes the full tree to file");
+  cmdLineInt.addOption("meanLow",&meanLow,0.2,"mean low range");
+  cmdLineInt.addOption("meanHigh",&meanHigh,2,"mean high range");
+  cmdLineInt.addOption("sigmaLow",&sigmaLow,0.0002,"mean low range");
+  cmdLineInt.addOption("sigmaHigh",&sigmaHigh,0.5,"mean high range");
+
   if(!cmdLineInt.processCmdLine(argc,argv)) return 0; //exit if we havnt managed to get required parameters
  
   const std::string regOutTag(regOutTagChar);
+
+  const RegTransformer meanTransform(meanLow,meanHigh);
+  const RegTransformer sigmaTransform(sigmaLow,sigmaHigh);
+  gMeanTransform = &meanTransform;
+  gSigmaTransform = &sigmaTransform;
+  
+  
 
   TTree* inTree = HistFuncs::makeChain(treeName,inFilename);
   TFile* outFile = new TFile(outFilename,"RECREATE");
@@ -163,7 +205,7 @@ int main(int argc, char** argv)
 
   const auto regDataEBAll = HistFuncs::readTree(inTree,varsEB+":"+*targetEB,"");
   const auto regDataEEAll = HistFuncs::readTree(inTree,varsEE+":"+*targetEE,"");
-  const auto evtData = HistFuncs::readTree(inTree,"runnr:eventnr:lumiSec:sc.isEB:"+std::string(etBinVar),"");
+  const auto evtData = HistFuncs::readTree(inTree,"runnr:eventnr:lumiSec:ele.isEB:"+std::string(etBinVar),"");
   fillTree(regDataEBAll,regDataEEAll,evtData,gbrForests,outTreeData,outTree,nrThreads);
 
 
@@ -264,16 +306,6 @@ void fillTree(const std::vector<std::vector<float> >& regDataEB,
 std::pair<double,double> getRes(const std::vector<float>& regData,const std::pair<const GBRForestD*,const GBRForestD*>& gbrForest)
 {
   
-  //(These should be stored inside the conditions object in the future as well)
-  constexpr double meanlimlow  = 0.2;
-  constexpr double meanlimhigh = 2.0;
-  constexpr double meanoffset  = meanlimlow + 0.5*(meanlimhigh-meanlimlow);
-  constexpr double meanscale   = 0.5*(meanlimhigh-meanlimlow);
-  
-  constexpr double sigmalimlow  = 0.0002;
-  constexpr double sigmalimhigh = 0.5;
-  constexpr double sigmaoffset  = sigmalimlow + 0.5*(sigmalimhigh-sigmalimlow);
-  constexpr double sigmascale   = 0.5*(sigmalimhigh-sigmalimlow);  
   
   
   //these are the actual BDT responses
@@ -281,8 +313,8 @@ std::pair<double,double> getRes(const std::vector<float>& regData,const std::pai
   double rawsigma = gbrForest.second->GetResponse(regData.data());
   
   //apply transformation to limited output range (matching the training)
-  double mean = meanoffset + meanscale*vdt::fast_sin(rawmean);
-  double sigma = sigmaoffset + sigmascale*vdt::fast_sin(rawsigma);
+  double mean = (*gMeanTransform)(rawmean);
+  double sigma = (*gSigmaTransform)(rawsigma);
   return {mean,sigma};
 }
 

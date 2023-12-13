@@ -2186,8 +2186,15 @@ void RooHybridBDTAutoPdf::TrainTree(const std::vector<HybridGBREvent*> &evts, do
   }
   
 //   // printf("bestvar = %i, nleft = %i, nright = %i, nlefts[bestvar] = %i, nrights[bestvar] = %i, cutvals[bestvar] = %5f, nmismatch = %i\n",bestvar,nleft,nright,_nlefts[bestvar],_nrights[bestvar],_cutvals[bestvar],nmismatch);
-  
-  assert(_nlefts[bestvar]==nleft);
+
+  //nleft and nright are just the number of events in a given bin, nleft < cut value, nright > cut value
+  //
+  if(_nlefts[bestvar]!=nleft || _nrights[bestvar]!=nright){
+    printf("when applying the cut value %f for this bin on variable number %i, the count obtained previously and the count just recalculated do not match\n",_cutvals[bestvar],bestvar);
+    printf("this can happen if variable number %i is NaN, check for this (you look need to look a the config to map the variable number to variable name)\n",bestvar);
+  }
+         
+  assert(_nlefts[bestvar]==nleft); 
   assert(_nrights[bestvar]==nright);
   
   //// printf("nleft = %i, nright = %i\n",nleft,nright);

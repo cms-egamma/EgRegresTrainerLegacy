@@ -142,11 +142,12 @@ bool ParReader::read(const string& parFileName)
        par.doCombine           =        params.GetValue(keyDoCombine.str().c_str(),          false);
 
        par.doEB                =        params.GetValue(keyDoEB.str().c_str(),               true);
-       
+       std::cout <<"meanmx "<<meanMax.str().c_str()<<std::endl;
        par.meanMin             =        params.GetValue(meanMin.str().c_str(),               0.2);
        par.meanMax             =        params.GetValue(meanMax.str().c_str(),               2.0);
        par.fixMean             =        params.GetValue(fixMean.str().c_str(),               false);
-       
+
+       params.Print();
        m_regParams.push_back(par);
 
     }
