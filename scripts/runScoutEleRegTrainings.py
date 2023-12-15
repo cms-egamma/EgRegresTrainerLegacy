@@ -18,8 +18,8 @@ def main():
     #step 3, ecal-trk 
 
 
-    run_step1 = True
-    run_step2 = True
+    run_step1 = False
+    run_step2 = False
     run_step3 = True
     
     
@@ -73,13 +73,13 @@ def main():
     print("starting step3")
     input_for_comb = str(regArgs.applied_name())
 
-    regArgs.base_name = "regEleEcalTrk{era_name}".format(era_name=era_name)
-    regArgs.set_elecomb_default()
+    regArgs.base_name = "regEleEcalTrkTrain{era_name}".format(era_name=era_name)
+    regArgs.set_elecomb_trktrain()
     regArgs.input_training = input_for_comb
     regArgs.input_testing = input_for_comb
     regArgs.write_full_tree = "0"  
     regArgs.fix_mean = False
-    regArgs.reg_out_tag = "EcalTrk"
+    regArgs.reg_out_tag = "EcalTrkTrain"
     regArgs.cuts_base = base_ele_cuts.format(extra_cuts = ep_eventnr_cut)
     if run_step3: 
         regArgs.run_eb_and_ee()

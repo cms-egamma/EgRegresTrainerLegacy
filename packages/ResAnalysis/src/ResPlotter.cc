@@ -52,14 +52,12 @@ void ResPlotter::Config::setDefaults()
     {"recoEle.trkPMode/mc.energy","offline trk p (mode)"},//6
     {"recoEle.trkPInn/mc.energy","offline trk p (inn)"},//7
     {"recoEle.trkPVtx/mc.energy","offline trk p (vtx)"},//8
+    {"old.invTar*old.mean","E/p combination (old)"},//9
+    {"recoEle.ecalEnergy/mc.energy","reco calo energy"},//10
   };
 
   std::vector<std::pair<std::string,std::string> > varsTree2 = {
-    {"sc.rawEnergy/mc.energy","raw energy, 102X"},
-    {"sc.corrEnergy/mc.energy","74X corr, 102X"},
-    {"ele.ecalEnergy/mc.energy","80X ecal, 102X"}, 
-    {"ele.energy/mc.energy","80X ecal-trk, 102X"},
-    {"pho.energy/mc.energy","80X pho, 102X"}
+      {"invTar*mean","E/p combination"},//4
   };
   vars.clear();
   vars.push_back(varsTree1);
@@ -84,6 +82,9 @@ void ResPlotter::VarNameData::autoFill()
     plotname = "<#PU>";
     filename = "NrTruePU";
     unit = "";
+  }else if(name=="abs(ele.eta)"){
+    plotname = "|#eta|";
+    filename = "AbsEta";
   }else{
     plotname = name;
     filename = name;
