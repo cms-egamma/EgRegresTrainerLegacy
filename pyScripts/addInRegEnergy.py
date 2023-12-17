@@ -163,11 +163,19 @@ if __name__ == "__main__":
     energy_corr = ROOT.std.vector('float')()
     trkp_corr = ROOT.std.vector('float')()
     energy_comb = ROOT.std.vector('float')()
+    sin_theta_trk = ROOT.std.vector('float')()
+    sin_theta_calo = ROOT.std.vector('float')()
+    best_trk_eta = ROOT.std.vector('float')()
+    best_trk_phi = ROOT.std.vector('float')()
 
     output_tree.Branch("Electron_ecorr", energy_corr)
     output_tree.Branch("Electron_trkpcorr", trkp_corr)
     output_tree.Branch("Electron_energycomb", energy_comb)
-    
+    output_tree.Branch("Electron_sintheta_trk", sin_theta_trk)
+    output_tree.Branch("Electron_sintheta_calo", sin_theta_calo)
+    output_tree.Branch("Electron_besttrketa", best_trk_eta)
+    output_tree.Branch("Electron_besttrkphi", best_trk_phi)
+
     ecal_reg = RegressionContainer("resultsEleTrkTrainOff/regEleEcalScout2023_stdVar_stdCuts_{region}_ntrees1500_results.root",0.2,2,0.0002,0.5)
     trk_reg = RegressionContainer("resultsEleTrkTrainOff/regEleTrkScout2023_stdVar_stdCuts_{region}_ntrees1500_results.root",0.2,2,0.0002,0.5)
     comb_reg = RegressionContainer("resultsEleTrkTrainOff/regEleEcalTrkScout2023_stdVar_stdCuts_{region}_ntrees1500_results.root",0.2,3,0.0002,0.5)
@@ -182,10 +190,18 @@ if __name__ == "__main__":
         energy_corr.clear()
         trkp_corr.clear()
         energy_comb.clear()
+        sin_theta_trk.clear()
+        sin_theta_calo.clear()
+        best_trk_eta.clear()
+        best_trk_phi.clear()
         energy_corr.resize(input_tree.n_ele)
         trkp_corr.resize(input_tree.n_ele)
         energy_comb.resize(input_tree.n_ele)        
-        
+        sin_theta_trk.resize(input_tree.n_ele)
+        sin_theta_calo.resize(input_tree.n_ele)
+        best_trk_eta.resize(input_tree.n_ele)
+        best_trk_phi.resize(input_tree.n_ele)
+
         features_ecal = get_features_calo(input_tree)
         features_trk = get_features_trk(input_tree)
         
@@ -206,8 +222,10 @@ if __name__ == "__main__":
             energy_corr[elenr] = energy * ecal_meansigmas[elenr][0]
             trkp_corr[elenr] = trkp * trk_meansigmas[elenr][0]
             energy_comb[elenr] = raw_comb[elenr] * comb_meansigmas[elenr][0]
-            
-            
+            sin_theta_trk[elenr] = np.sin(ROOT.MathFuncs.etaToTheta(input_tree.Electron_trketa[elenr][trk_indx]))
+            sin_theta_calo[elenr] = np.sin(ROOT.MathFuncs.etaToTheta(input_tree.Electron_eta[elenr]))
+            best_trk_eta[elenr] = input_tree.Electron_trketa[elenr][trk_indx]
+            best_trk_phi[elenr] = input_tree.Electron_trkphi[elenr][trk_indx]
         
         output_tree.Fill()
 

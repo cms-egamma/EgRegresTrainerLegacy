@@ -64,10 +64,17 @@ class RegArgs:
         self.mean_min = 0.2
         self.mean_max = 3.0
 
+    def set_elecomb_trktrain_bugged(self):
+        self.var_eb =":".join(["ele.pt*regEcalMean","regEcalSigma/regEcalMean","regTrkSigma/regTrkMean","ele.trkd0[ele.bestTrkIndx]","ele.pt*regEcalMean/ele.trkpt[ele.bestTrkIndx]/regTrkMean","ele.trkchi2overndf[ele.bestTrkIndx]","ele.nrTrks"])
+        self.var_ee =":".join(["ele.pt*regEcalMean","regEcalSigma/regEcalMean","regTrkSigma/regTrkMean","ele.trkd0[ele.bestTrkIndx]","ele.pt*regEcalMean/ele.trkpt[ele.bestTrkIndx]/regTrkMean","ele.trkchi2overndf[ele.bestTrkIndx]","ele.nrTrks"])
+        self.target = "mc.energy * (regTrkSigma*regTrkSigma*ele.trkp[ele.bestTrkIndx]*ele.trkp[ele.bestTrkIndx] + ele.energy*ele.energy*regEcalSigma*regEcalSigma) / (ele.energy*regEcalMean*ele.trkp[ele.bestTrkIndx]*ele.trkp[ele.bestTrkIndx]*regTrkSigma*regTrkSigma + ele.trkp[ele.bestTrkIndx]*ele.energy*ele.energy*regEcalSigma*regEcalSigma) " #the trk p is missing the correction
+        self.mean_min = 0.2
+        self.mean_max = 3.0
+
     def set_elecomb_trktrain(self):
         self.var_eb =":".join(["ele.pt*regEcalMean","regEcalSigma/regEcalMean","regTrkSigma/regTrkMean","ele.trkd0[ele.bestTrkIndx]","ele.pt*regEcalMean/ele.trkpt[ele.bestTrkIndx]/regTrkMean","ele.trkchi2overndf[ele.bestTrkIndx]","ele.nrTrks"])
         self.var_ee =":".join(["ele.pt*regEcalMean","regEcalSigma/regEcalMean","regTrkSigma/regTrkMean","ele.trkd0[ele.bestTrkIndx]","ele.pt*regEcalMean/ele.trkpt[ele.bestTrkIndx]/regTrkMean","ele.trkchi2overndf[ele.bestTrkIndx]","ele.nrTrks"])
-        self.target = "mc.energy * (regTrkSigma*regTrkSigma*ele.trkp[ele.bestTrkIndx]*ele.trkp[ele.bestTrkIndx] + ele.energy*ele.energy*regEcalSigma*regEcalSigma) / (ele.energy*regEcalMean*ele.trkp[ele.bestTrkIndx]*ele.trkp[ele.bestTrkIndx]*regTrkSigma*regTrkSigma + ele.trkp[ele.bestTrkIndx]*ele.energy*ele.energy*regEcalSigma*regEcalSigma) "
+        self.target = "mc.energy * (regTrkSigma*regTrkSigma*ele.trkp[ele.bestTrkIndx]*ele.trkp[ele.bestTrkIndx] + ele.energy*ele.energy*regEcalSigma*regEcalSigma) / (ele.energy*regEcalMean*ele.trkp[ele.bestTrkIndx]*ele.trkp[ele.bestTrkIndx]*regTrkSigma*regTrkSigma + ele.trkp[ele.bestTrkIndx]*regTrkMean*ele.energy*ele.energy*regEcalSigma*regEcalSigma) " 
         self.mean_min = 0.2
         self.mean_max = 3.0
 
