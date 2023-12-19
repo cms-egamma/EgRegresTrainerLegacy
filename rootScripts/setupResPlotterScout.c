@@ -35,10 +35,13 @@
    TTree* regTreeScouting = HistFuncs::makeChain("egScoutRegTree","resultsEleTrkTrainOff/regEleTrkScout2023_stdVar_stdCuts_ntrees1500_applied.root",1,1,1);
    TTree* regTreeScoutingFriendOld = HistFuncs::makeChain("egScoutRegTreeFriend","resultsEleTrkTrainOff/regEleEcalTrkScout2023_stdVar_stdCuts_ntrees1500_applied.root",1,1,1);
    TTree* regTreeScoutingFriend = HistFuncs::makeChain("egScoutRegTreeFriend","resultsEleTrkTrainOff/regEleEcalTrkTrainScout2023_stdVar_stdCuts_ntrees1500_applied.root",1,1,1);
+   TTree* regTreeScoutingFriendBug = HistFuncs::makeChain("egScoutRegTreeFriend","resultsEleTrkTrainOff/regEleEcalTrkTrainBugFixScout2023_stdVar_stdCuts_ntrees1500_applied.root",1,1,1);
+   
    
    
    regTreeScouting->AddFriend(regTreeScoutingFriend);
    regTreeScouting->AddFriend(regTreeScoutingFriendOld,"old");
+   regTreeScouting->AddFriend(regTreeScoutingFriendBug,"bf");
    /*************************************
    #now as an example do the following, R
    #note the second tree argument is for when I was comparing to a different sample, 

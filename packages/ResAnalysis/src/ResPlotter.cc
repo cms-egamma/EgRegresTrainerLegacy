@@ -54,6 +54,7 @@ void ResPlotter::Config::setDefaults()
     {"recoEle.trkPVtx/mc.energy","offline trk p (vtx)"},//8
     {"old.invTar*old.mean","E/p combination (old)"},//9
     {"recoEle.ecalEnergy/mc.energy","reco calo energy"},//10
+    {"bf.invTar*bf.mean","E/p combination (bug fixed)"},//11
   };
 
   std::vector<std::pair<std::string,std::string> > varsTree2 = {
