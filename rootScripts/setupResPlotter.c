@@ -5,6 +5,7 @@
    std::vector<double> etaBins = {0.,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.4442,1.566,1.7,1.8,1.9,2.,2.25,2.5};//,2.75,3.0}
    std::vector<double> etaBinsPho = {0.,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.4442,1.566,1.7,1.8,1.9,2.,2.25,2.5,2.75,3.0};
    std::vector<double> etBins = {5,15,30,50,100,150,300};
+   std::vector<double> ptOneBin = {5,300};
    std::vector<double> etBinsPho = {10,20,30,50,100,150,300};
    std::vector<double> etBinsSC = {25,40,50,60};
    
@@ -23,9 +24,14 @@
    gErrorIgnoreLevel = kError;
   
    //trees
-   //with 102X regression applied by default
-   TTree* regTreeEleReal2018V52018Reg = HistFuncs::makeChain("egRegTree","/eos/cms/store/group/phys_egamma/ReleaseInputsArchive/2018UL_ElePhoReg/input_trees_with_regapplied/DoubleElectron_FlatPt-1To300_2018ConditionsFlatPU0to70RAW_105X_upgrade2018_realistic_v4-v1_AODSIM_EgRegTreeV5Refined2018Reg.root",1,1,1);
    
+    std::string resultsDirectory = "/home/hep/wrtabb/Egamma/results/2016UL/";
+    std::string inputDirectory = "/home/hep/wrtabb/Egamma/input_trees/2016UL/";
+    std::string input_file = "DoubleElectron_FlatPt-1To300_2016ConditionsFlatPU0to70RAW_105X_realistic_v2-v2.root";
+    std::string results_file = "regEleEcalTrk2016UL_RealIC_stdVar_stdCuts_ntrees1500_applied.root";
+    TTree*treeEle = HistFuncs::makeChain("egRegTree",inputDirectory+input_file,1,1,1);
+    TTree*treeEleFriend = HistFuncs::makeChain("egRegTreeFriend",resultsDirectory+results_file,1,1,1);
+    treeEle->AddFriend(treeEleFriend);
 
    /*************************************
    #now as an example do the following, 
