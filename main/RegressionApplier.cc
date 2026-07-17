@@ -205,7 +205,7 @@ int main(int argc, char** argv)
 
   const auto regDataEBAll = HistFuncs::readTree(inTree,varsEB+":"+*targetEB,"");
   const auto regDataEEAll = HistFuncs::readTree(inTree,varsEE+":"+*targetEE,"");
-  const auto evtData = HistFuncs::readTree(inTree,"runnr:eventnr:lumiSec:ele.isEB:"+std::string(etBinVar),"");
+  const auto evtData = HistFuncs::readTree(inTree,"runnr:eventnr:lumiSec:sc.isEB:"+std::string(etBinVar),"");
   fillTree(regDataEBAll,regDataEEAll,evtData,gbrForests,outTreeData,outTree,nrThreads);
 
 

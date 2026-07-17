@@ -725,9 +725,8 @@ void RooGBRTargetFlex::ClearFuncServers() {
 double RooGBRTargetFlex::EvalFunc() const
 {
   
-  RooFIter iter = _funcvars.fwdIterator();
   for (int ivar=0; ivar<_funcvars.getSize(); ++ivar) {
-    _eval[ivar] = static_cast<RooAbsReal*>(iter.next())->getVal();
+    _eval[ivar] = static_cast<RooAbsReal*>(_funcvars.at(ivar))->getVal();
     //// printf("ivar = %i, var = %5f\n",ivar,_eval[ivar]);
   }  
   return static_cast<RooGBRFunctionFlex*>(_func.absArg())->Forest()->GetResponse(&_eval[0]);
