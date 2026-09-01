@@ -24,8 +24,8 @@ class RegArgs:
         self.input_testing = "test.root"
         self.input_training = "train.root"
         self.target = "mc.energy/ele.energy"
-        self.var_eb = "rho:ele.energy:ele.eta:ele.phi:ele.sigmaIetaIeta:ele.r9:ele.sMin:ele.sMaj:ele.rechitZeroSuppression:ele.iEtaOrIX:ele.iPhiOrIY";        
-        self.var_ee = "rho:ele.energy:ele.eta:ele.phi:ele.sigmaIetaIeta:ele.r9:ele.sMin:ele.sMaj:ele.rechitZeroSuppression:ele.iEtaOrIX:ele.iPhiOrIY";
+        self.var_eb = "rho:ele.energy:ele.eta:ele.phi:ele.sigmaIetaIeta:ele.r9:ele.sMin:ele.sMaj:ele.rechitZeroSuppression:ele.iEtaOrIX:ele.iPhiOrIY"        
+        self.var_ee = "rho:ele.energy:ele.eta:ele.phi:ele.sigmaIetaIeta:ele.r9:ele.sMin:ele.sMaj:ele.rechitZeroSuppression:ele.iEtaOrIX:ele.iPhiOrIY"
         self.cuts_base = "(mc.energy>0 && ele.pt>0 && evt.eventnr%2==0)"
         self.ntrees = 1500
         self.do_eb = True
