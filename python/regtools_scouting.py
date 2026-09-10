@@ -49,15 +49,71 @@ class RegArgs:
 
     def set_vars_withtrk(self):
         self.var_eb = "rho:ele.pt:ele.eta:ele.phi:ele.trkdz[ele.bestTrkIndx]:ele.trkpt[ele.bestTrkIndx]:ele.trketa[ele.bestTrkIndx]:ele.trkchi2overndf[ele.bestTrkIndx]:ele.sigmaIetaIeta:ele.r9:ele.sMin:ele.sMaj:ele.rechitZeroSuppression:ele.iEtaOrIX:ele.iPhiOrIY";        
-        self.var_ee = "rho:ele.pt:ele.eta:ele.phi:ele.trkdz[ele.bestTrkIndx]:ele.trkpt[ele.bestTrkIndx]:ele.trketa[ele.bestTrkIndx]:ele.trkchi2overndf[ele.bestTrkIndx]:ele.sigmaIetaIeta:ele.r9:ele.sMin:ele.sMaj:ele.rechitZeroSuppression:ele.iEtaOrIX:ele.iPhiOrIY";
+        self.var_ee = "rho:ele.pt:ele.eta:ele.phi:ele.trkdz[ele.bestTrkIndx]:ele.trkpt[ele.bestTrkIndx]:ele.trketa[ele.bestTrkIndx]:ele.trkchi2overndf[ele.bestTrkIndx]:ele.sigmaIetaIeta:ele.r9:ele.sMin:ele.sMaj:ele.rechitZeroSuppression:ele.iEtaOrIX:ele.iPhiOrIY"
         
     def set_trk_vars(self):
-        self.var_eb = "ele.trkdz[ele.bestTrkIndx]:ele.trkpt[ele.bestTrkIndx]:ele.trketa[ele.bestTrkIndx]:ele.trkphi[ele.bestTrkIndx]:ele.trkchi2overndf[ele.bestTrkIndx]";        
-        self.var_ee = "ele.trkdz[ele.bestTrkIndx]:ele.trkpt[ele.bestTrkIndx]:ele.trketa[ele.bestTrkIndx]:ele.trkphi[ele.bestTrkIndx]:ele.trkchi2overndf[ele.bestTrkIndx]";  
+        self.var_eb = "ele.trkdz[ele.bestTrkIndx]:ele.trkpt[ele.bestTrkIndx]:ele.trketa[ele.bestTrkIndx]:ele.trkphi[ele.bestTrkIndx]:ele.trkchi2overndf[ele.bestTrkIndx]" 
+        self.var_ee = "ele.trkdz[ele.bestTrkIndx]:ele.trkpt[ele.bestTrkIndx]:ele.trketa[ele.bestTrkIndx]:ele.trkphi[ele.bestTrkIndx]:ele.trkchi2overndf[ele.bestTrkIndx]"
         self.target = "mc.energy/ele.trkp[ele.bestTrkIndx]"
 
         
-    def set_elecomb_default(self):
+    def set_elecomb_default(self,use_existing_energy=False):
+
+
+        if use_existing_energy:
+            corrEcalEnergy = "ele.energy"
+            ecalSigmaTimesEnergy = "ele.corrEcalEnergyError*(ele.rawEnergy+ele.preshowerEnergy)"
+            ecalMean = "ele.energy/(ele.rawEnergy+ele.preshowerEnergy)"
+            relEcalSigma = f"ele.corrEcalEnergyError/{ecalMean}"
+        else:
+            baseEnergy = "ele.energy"  #because we dont have rawEnergy in scouting samples
+            #baseEnergy = "(ele.rawEnergy+ele.preshowerEnergy)"
+            ecalMean = "regEcalMean"
+            corrEcalEnergy = f"{baseEnergy}*{ecalMean}"
+            ecalSigmaTimesEnergy = f"regEcalSigma*{baseEnergy}"
+            
+            relEcalSigma = f"regEcalSigma/{ecalMean}"
+
+        trkP = "ele.trkpMode[ele.bestTrkIndx]"
+        trkPErr = "abs(ele.trkqoverpModeError[ele.bestTrkIndx])*ele.trkpMode[ele.bestTrkIndx]*ele.trkpMode[ele.bestTrkIndx]" 
+        ecalSigmaSq = f"{ecalSigmaTimesEnergy}*{ecalSigmaTimesEnergy}"
+        trkPErrSq = f"{trkPErr}*{trkPErr}"
+        rawCombEnergyNumer = f"{corrEcalEnergy}*{trkPErrSq} + {trkP}*{ecalSigmaSq}"
+        rawCombEnergyDenom = f"{trkPErrSq}+{ecalSigmaSq}"
+      
+
+
+        self.var_eb =":".join([corrEcalEnergy,
+                               relEcalSigma,
+                               "ele.trkqoverpModeError[ele.bestTrkIndx]/ele.trkpMode[ele.bestTrkIndx]",
+                               f"{corrEcalEnergy}/ele.trkpMode[ele.bestTrkIndx]",
+                               "ele.r9",
+                               "ele.trackfbrem",
+                               "ele.trketaMode[ele.bestTrkIndx]",
+                               "ele.trkphiMode[ele.bestTrkIndx]",
+                             #  ecalSigmaSq,
+                             #  trkPErrSq,
+                             #  rawCombEnergyNumer,
+                             #  rawCombEnergyDenom,
+                               ])
+        self.var_ee =":".join([corrEcalEnergy,
+                               relEcalSigma,
+                               "ele.trkqoverpModeError[ele.bestTrkIndx]/ele.trkpMode[ele.bestTrkIndx]",
+                               f"{corrEcalEnergy}/ele.trkpMode[ele.bestTrkIndx]",
+                               "ele.r9",
+                               "ele.trackfbrem",
+                               "ele.trketaMode[ele.bestTrkIndx]",
+                               "ele.trkphiMode[ele.bestTrkIndx]"]
+                               )   
+
+       
+        self.target = f"mc.energy * ({rawCombEnergyDenom}) / ({rawCombEnergyNumer}) "
+        self.mean_min = 0.2
+        self.mean_max = 3.0
+
+    
+
+    def set_elecomb_2023(self):
         self.var_eb =":".join(["ele.pt*regEcalMean","regEcalSigma/regEcalMean","ele.trkd0[ele.bestTrkIndx]","ele.pt*regEcalMean/ele.trkpt[ele.bestTrkIndx]","ele.trkchi2overndf[ele.bestTrkIndx]","ele.nrTrks"])
         self.var_ee =":".join(["ele.pt*regEcalMean","regEcalSigma/regEcalMean","ele.trkd0[ele.bestTrkIndx]","ele.pt*regEcalMean/ele.trkpt[ele.bestTrkIndx]","ele.trkchi2overndf[ele.bestTrkIndx]","ele.nrTrks"])
         self.target = "mc.energy * (0.0036*ele.trkp[ele.bestTrkIndx]*ele.trkp[ele.bestTrkIndx] + ele.energy*ele.energy*regEcalSigma*regEcalSigma) / (ele.energy*regEcalMean*ele.trkp[ele.bestTrkIndx]*ele.trkp[ele.bestTrkIndx]*0.0036 + ele.trkp[ele.bestTrkIndx]*ele.energy*ele.energy*regEcalSigma*regEcalSigma) "
@@ -109,17 +165,17 @@ Regression.1.FixMean: {args.fix_mean}
         self.make_cfg()
         print("starting: {}".format(self.name()))
         print("cfg name",self.cfg_name())
-        subprocess.Popen(["bin/el8_amd64_gcc11/RegressionTrainerExe",self.cfg_name()]).communicate()
+        subprocess.Popen(["bin/el9_amd64_gcc13/RegressionTrainerExe",self.cfg_name()]).communicate()
         forest_eb_file = self.output_name()
     
         self.do_eb = False
         self.make_cfg()
         print("starting: {}".format(self.name()))
-        subprocess.Popen(["bin/el8_amd64_gcc11/RegressionTrainerExe",self.cfg_name()]).communicate()
+        subprocess.Popen(["bin/el9_amd64_gcc13/RegressionTrainerExe",self.cfg_name()]).communicate()
         forest_ee_file = self.output_name()
 
         
-        subprocess.Popen(["bin/el8_amd64_gcc11/RegressionApplierExe",self.input_testing,self.applied_name(),"--gbrForestFileEE",forest_ee_file,"--gbrForestFileEB",forest_eb_file,"--nrThreads","4","--treeName",self.tree_name,"--writeFullTree",self.write_full_tree,"--regOutTag",self.reg_out_tag,"--meanLow",str(self.mean_min),"--meanHigh",str(self.mean_max)]).communicate()
+        subprocess.Popen(["bin/el9_amd64_gcc13/RegressionApplierExe",self.input_testing,self.applied_name(),"--gbrForestFileEE",forest_ee_file,"--gbrForestFileEB",forest_eb_file,"--nrThreads","4","--treeName",self.tree_name,"--writeFullTree",self.write_full_tree,"--regOutTag",self.reg_out_tag,"--meanLow",str(self.mean_min),"--meanHigh",str(self.mean_max)]).communicate()
 
         print("made ",self.applied_name())
 
