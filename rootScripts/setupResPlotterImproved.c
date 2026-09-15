@@ -9,7 +9,7 @@
    std::vector<double> etaBinsScout = {0.,0.4,0.8,1.2,1.4442,1.566,2.,2.5};//,2.75,3.0}
    std::vector<double> etaBinsEBEE = {0.,1.4442,1.566,2.5};
    std::vector<double> etBins = {5,15,30,50,100,150,300};
-   std::vector<double> etBinsTest = {25,35,50,100,150,300};
+   std::vector<double> etBinsTest = {25,50,100,150,300};
    std::vector<double> etBinsScout = {5,10,15,20,30,50,100};
  
    
@@ -39,9 +39,15 @@
    TTree* regTreeFriend = HistFuncs::makeChain("egRegTreeFriend","resultsEle2/regEleEcalRetrain2026_stdVar_stdCuts_ntrees1500_applied.root",1,1,1);
    TTree* regTreeFriendOld = HistFuncs::makeChain("egRegTreeFriend","resultsEle1/regEleEcalRetrain2026_stdVar_stdCuts_ntrees1500_applied.root",1,1,1);
    TTree* regTreeFriendMin = HistFuncs::makeChain("egRegTreeFriend","resultsEle2/regEleEcalRetrain2026_Minimimal_stdVar_stdCuts_ntrees1500_applied.root",1,1,1);
+   
+   
    //TTree* regTreeFriendMinEta = HistFuncs::makeChain("egRegTreeFriend","resultsEle2/regEleEcalRetrain2026_StdPosEtaZQ_stdVar_stdCuts_ntrees1500_applied.root",1,1,1);
    //TTree* regTreeFriendMinEta = HistFuncs::makeChain("egRegTreeFriend","resultsEle2/regEleEcalRetrain2026_FullPosEtaZQ_15kTree_stdVar_stdCuts_ntrees15000_applied.root",1,1,1);
-   TTree* regTreeFriendGapTrain = HistFuncs::makeChain("egRegTreeFriend","resultsEle2/regEleEcalRetrain2026_FullPosEtaZQ_EtaGapNoPhiGap1Clus_stdVar_stdCuts_ntrees15000_applied.root",1,1,1);
+   //TTree* regTreeFriendGapTrain = HistFuncs::makeChain("egRegTreeFriend","resultsEle2/regEleEcalRetrain2026_FullPosEtaZQ_EtaGapNoPhiGap1Clus_stdVar_stdCuts_ntrees15000_applied.root",1,1,1);
+   //TTree* regTreeFriendGapTrain = HistFuncs::makeChain("egRegTreeFriend","resultsEle2/regEleEcalRetrain2026_FullPosEtaZQ_EtaPhiGap1Clus_stdVar_stdCuts_ntrees15000_applied.root",1,1,1);
+   
+   TTree* regTreeFriendGapTrain = HistFuncs::makeChain("egRegTreeFriend","resultsEle2/regEleEcalRetrain2026_FullPosEtaZQ_EtaOrPhiGap1Clus_stdVar_stdCuts_ntrees15000_applied.root",1,1,1);
+
    TTree* regTreeFriendFullEtaZQ = HistFuncs::makeChain("egRegTreeFriend","resultsEle2/regEleEcalRetrain2026_FullPosEtaZQ_stdVar_stdCuts_ntrees1500_applied.root",1,1,1);
    regTree->AddFriend(regTreeFriend);
    regTree->AddFriend(regTreeFriendGapTrain,"fullEtaZQEtaGap");
@@ -62,6 +68,6 @@
    ************************************/
    
   ResPlotter resPlotter;
-   //resPlotter.makeHists({regTree,nullptr},"z_{vtx}>0, |#eta|>0, q>0, #eta/#phi gap=1,0, #clus=1","mc.energy>0 && sc.rawEnergy>0 && ssFrac.sigmaIEtaIEta>0 && mc.dR<0.1 && ele.et>0 && eventnr%2==1 && sc.scEta>0 && eleExtra.q>0 && eleExtra.z0>0 && sc.etaGapCode==-1 && sc.phiGapCode==0 && sc.numberOfClusters==1","mc.pt","sc.seedEta",etBinsTest,etaBinsGap)
-   resPlotter.makeHists({regTree,nullptr},"z_{vtx}>0, |#eta|>0, q>0","mc.energy>0 && sc.rawEnergy>0 && ssFrac.sigmaIEtaIEta>0 && mc.dR<0.1 && ele.et>0 && eventnr%2==1 && sc.scEta>0 && eleExtra.q>0 && eleExtra.z0>0","mc.pt","sc.seedEta",etBinsTest,etaBinsGap)
+  resPlotter.makeHists({regTree,nullptr},"z_{vtx}>0, |#eta|>0, q>0, #eta/#phi gap=-1,0, #clus=1","mc.energy>0 && sc.rawEnergy>0 && ssFrac.sigmaIEtaIEta>0 && mc.dR<0.1 && ele.et>0 && eventnr%2==1 && sc.scEta>0 && eleExtra.q>0 && eleExtra.z0>0 && (sc.etaGapCode!=0 || sc.phiGapCode!=0) && sc.numberOfClusters==1","mc.pt","sc.seedEta",etBinsTest,etaBinsGap)
+  //resPlotter.makeHists({regTree,nullptr},"z_{vtx}>0, |#eta|>0, q>0","mc.energy>0 && sc.rawEnergy>0 && ssFrac.sigmaIEtaIEta>0 && mc.dR<0.1 && ele.et>0 && eventnr%2==1 && sc.scEta>0 && eleExtra.q>0 && eleExtra.z0>0","mc.pt","sc.seedEta",etBinsTest,etaBinsGap)
 }

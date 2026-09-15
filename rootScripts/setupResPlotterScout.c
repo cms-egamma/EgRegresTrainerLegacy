@@ -5,7 +5,9 @@
    std::vector<double> etaBins = {0.,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.4442,1.566,1.7,1.8,1.9,2.,2.25,2.5};//,2.75,3.0}
    std::vector<double> etaBinsPho = {0.,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.4442,1.566,1.7,1.8,1.9,2.,2.25,2.5,2.75,3.0};
    std::vector<double> etaBinsScout = {0.,0.4,0.8,1.2,1.4442,1.566,2.,2.5};//,2.75,3.0}
-   std::vector<double> etaBinsEBEE = {0.,1.4442,1.566,2.5};
+   //std::vector<double> etaBinsEBEE = {0.,1.4442,1.566,2.5};
+   std::vector<double> etaBinsEBEE = {1.566,2.0,2.5};
+
    std::vector<double> etBins = {5,15,30,50,100,150,300};
    std::vector<double> etBinsScout = {5,10,15,20,30,50,100};
  
@@ -32,13 +34,12 @@
    //TTree* regTreeScouting = HistFuncs::makeChain("egScoutRegTree","resultsEleV1/regEleEcalScout2023_IdealIC_IdealTraining_stdVar_stdCuts_ntrees1500_applied.root",1,1,1);
    //TTree* regTreeScoutingFriend = HistFuncs::makeChain("egScoutRegTreeFriend","resultsEleV1/regEleEcalTrkScout2023_RealIC_stdVar_stdCuts_ntrees1500_applied.root",1,1,1);
 
-   TTree* regTreeScouting = HistFuncs::makeChain("egScoutRegTree","resultsEleTrkTrainOff/regEleTrkScout2023_stdVar_stdCuts_ntrees1500_applied.root",1,1,1);
-   TTree* regTreeScoutingFriendOld = HistFuncs::makeChain("egScoutRegTreeFriend","resultsEleTrkTrainOff/regEleEcalTrkScout2023_stdVar_stdCuts_ntrees1500_applied.root",1,1,1);
-   TTree* regTreeScoutingFriend = HistFuncs::makeChain("egScoutRegTreeFriend","resultsEleTrkTrainOff/regEleEcalTrkTrainScout2023_stdVar_stdCuts_ntrees1500_applied.root",1,1,1);
+   TTree* regTreeScouting = HistFuncs::makeChain("egScoutRegTree","resultsEleTrkTrainOff/regEleEcalScout2024_stdVar_stdCuts_ntrees1500_applied.root",1,1,1);
+   TTree* regTreeScoutingFriend = HistFuncs::makeChain("egScoutRegTreeFriend","resultsEleTrkTrainOff/regEleEcalTrkTrainScout2024_stdVar_stdCuts_ntrees1500_applied.root",1,1,1);
    
    
    regTreeScouting->AddFriend(regTreeScoutingFriend);
-   regTreeScouting->AddFriend(regTreeScoutingFriendOld,"old");
+   
    /*************************************
    #now as an example do the following, R
    #note the second tree argument is for when I was comparing to a different sample, 
@@ -53,6 +54,6 @@
   
    ************************************/
    ResPlotter resPlotter;
-   resPlotter.makeHists({regTreeScouting,nullptr},"Run3 Scout","mc.energy>0 && ele.pt>0 && ele.energy/ele.trkp[ele.bestTrkIndx]<4 && (eventnr%10)>=3 && recoEle.energy>0","mc.pt","abs(ele.eta)",etBinsScout,etaBinsEBEE)
+   resPlotter.makeHists({regTreeScouting,nullptr},"Run3 Scout","mc.energy>0 && ele.pt>0 && ele.energy/ele.trkpMode[ele.bestTrkIndx]<4 && (eventnr%10)>=3 && ele.energy>0","mc.pt","abs(ele.eta)",etBinsScout,etaBinsEBEE)
 
 }

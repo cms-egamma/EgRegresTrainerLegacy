@@ -23,12 +23,12 @@ def main():
     run_step3 = False
     
     
-    era_name = "Retrain2026_FullPosEtaZQ_EtaGapNoPhiGap1Clus"
+    era_name = "Retrain2026_FullPosEtaZQ_EtaOrPhiGap1Clus"
     input_real_ic  = "{}/DoubleElectron_FlatPT-1t500_skimmedntup.root".format(args.input_dir)
 
     base_ele_cuts = "(mc.energy>0 && ssFrac.sigmaIEtaIEta>0 && ssFrac.sigmaIPhiIPhi>0 && ele.et>0 && {extra_cuts})"
 
-    base_ele_cuts = "(mc.energy>0 && ssFrac.sigmaIEtaIEta>0 && ssFrac.sigmaIPhiIPhi>0 && ele.et>0 && sc.scEta>0 && eleExtra.q>0 && eleExtra.z0>0 && sc.etaGapCode==-1 && sc.phiGapCode==0 && sc.numberOfClusters==1 && {extra_cuts})"
+    base_ele_cuts = "(mc.energy>0 && ssFrac.sigmaIEtaIEta>0 && ssFrac.sigmaIPhiIPhi>0 && ele.et>0 && sc.scEta>0 && eleExtra.q>0 && eleExtra.z0>0 && ((sc.etaGapCode!=0 || sc.phiGapCode!=0) || !sc.isEB) && sc.numberOfClusters==1 && {extra_cuts})"
 
     ecal_eventnr_cut = "evt.eventnr%2==0" 
     trk_eventnr_cut = "evt.eventnr%10==1" 
@@ -56,8 +56,8 @@ def main():
     regArgs.cuts_name = "stdCuts"
     regArgs.cfg_dir = "configs"
     regArgs.out_dir = "resultsEle2" 
-    regArgs.ntrees = 15000 
-    regArgs.min_events = 100
+    regArgs.ntrees = 1500 
+    regArgs.min_events = 300
     regArgs.base_name = "regEleEcal{era_name}".format(era_name=era_name)
     regArgs.reg_out_tag = "Ecal"
 
